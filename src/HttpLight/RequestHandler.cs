@@ -53,7 +53,7 @@ namespace HttpLight
                         var result = route.ActionInvoker.IsAsync
                             ? await route.ActionInvoker.InvokeAsync(instance, parameters)
                             : route.ActionInvoker.Invoke(instance, parameters);
-                        var resultStream = StreamHelper.ObjectToStream(result, route.ActionInfo);
+                        var resultStream = StreamHelper.ObjectToStream(result, route.ActionInfo, route.ActionInvoker.ReturnType);
                         await resultStream.CopyToAsync(stream);
                     }
                     catch (Exception e)

@@ -16,12 +16,14 @@ namespace HttpLight.Utils
             _converters[typeof(byte[])] = FromByteArray;
         }
 
-        public static Stream ObjectToStream(object obj, ActionInfo action)
+        public static Stream ObjectToStream(object obj, ActionInfo action, Type baseType = null)
         {
-            var type = obj.GetType();
+            if (obj == null)
+                return new MemoryStream(new byte[0]);
+            var type = baseType ?? obj.GetType();
             StreamConverter converter;
             if (!_converters.TryGetValue(type, out converter))
-                return new MemoryStream(new byte[0]);
+                return new MemoryStream(action.Encoding.GetBytes(obj.GetType().FullName));
             return converter(obj, action);
         }
 

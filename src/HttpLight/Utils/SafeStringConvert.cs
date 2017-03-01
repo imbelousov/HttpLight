@@ -38,8 +38,8 @@ namespace HttpLight.Utils
             _converters[typeof(ulong?)] = ToNullableUInt64;
             _converters[typeof(BigInteger)] = ToBigInteger;
             _converters[typeof(BigInteger?)] = ToNullableBigInteger;
-            _converters[typeof(float)] = ToFloat;
-            _converters[typeof(float?)] = ToNullableFloat;
+            _converters[typeof(float)] = ToSingle;
+            _converters[typeof(float?)] = ToNullableSingle;
             _converters[typeof(double)] = ToDouble;
             _converters[typeof(double?)] = ToNullableDouble;
             _converters[typeof(decimal)] = ToDecimal;
@@ -256,14 +256,14 @@ namespace HttpLight.Utils
             return result;
         }
 
-        private static object ToFloat(string s, IFormatProvider provider)
+        private static object ToSingle(string s, IFormatProvider provider)
         {
             float result;
             float.TryParse(s, NumberStyles.Any, provider, out result);
             return result;
         }
 
-        private static object ToNullableFloat(string s, IFormatProvider provider)
+        private static object ToNullableSingle(string s, IFormatProvider provider)
         {
             float result;
             if (!float.TryParse(s, NumberStyles.Any, provider, out result))

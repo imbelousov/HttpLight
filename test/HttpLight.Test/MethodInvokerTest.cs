@@ -1,110 +1,113 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 #if FEATURE_ASYNC
 using System.Threading.Tasks;
 #endif
 using HttpLight.Utils;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace HttpLight.Test
 {
-    [TestClass]
+    [TestFixture]
     public class MethodInvokerTest
     {
-        [TestMethod]
-        public void VoidRefSync()
+        [TestCase(nameof(MethodInvokerTestClass.VoidRefSync), new object[] {"1", "a"}, ExpectedResult = null, TestName = "Reference type, returns void, sync method")]
+        [TestCase(nameof(MethodInvokerTestClass.StringRefSync), new object[] {"1", "a"}, ExpectedResult = "1a", TestName = "Reference type, returns string, sync method")]
+        [TestCase(nameof(MethodInvokerTestClass.VoidValSync), new object[] {1, 2}, ExpectedResult = null, TestName = "Value type, returns void, sync method")]
+        [TestCase(nameof(MethodInvokerTestClass.IntValSync), new object[] {1, 2}, ExpectedResult = 3, TestName = "Value type, returns int, sync method")]
+        public object Invoke(string methodName, object[] parameters)
         {
             var instance = new MethodInvokerTestClass();
-            var invoker = new MethodInvoker(GetMethod(instance, nameof(instance.VoidRefSync)), instance.GetType());
+            var methodInfo = GetMethod(instance, methodName);
+            var invoker = new MethodInvoker(methodInfo, instance.GetType());
+            var result = invoker.Invoke(instance, parameters);
+            return result;
+        }
+
+        [Test]
+        public void Parameters()
+        {
+            var instance = new MethodInvokerTestClass();
+            var methodInfo = GetMethod(instance, nameof(MethodInvokerTestClass.TestMethod));
+            var invoker = new MethodInvoker(methodInfo, instance.GetType());
+            Assert.AreEqual(2, invoker.Parameters.Count);
+            Assert.AreEqual(typeof(int), invoker.Parameters[0].Type);
+            Assert.AreEqual("x", invoker.Parameters[0].Name);
+            Assert.AreEqual(0, invoker.Parameters[0].Attributes.Length);
+            Assert.AreEqual(typeof(long), invoker.Parameters[1].Type);
+            Assert.AreEqual("y", invoker.Parameters[1].Name);
+            Assert.AreEqual(1, invoker.Parameters[1].Attributes.Length);
+            Assert.IsTrue(invoker.Parameters[1].Attributes[0] is MethodInvokerTestAttribute);
+        }
+
+        [TestCase(nameof(MethodInvokerTestClass.VoidRefSync), ExpectedResult = typeof(void), TestName = "void")]
+        [TestCase(nameof(MethodInvokerTestClass.StringRefSync), ExpectedResult = typeof(string), TestName = "string")]
 #if FEATURE_ASYNC
-            Assert.IsFalse(invoker.IsAsync);
+        [TestCase(nameof(MethodInvokerTestClass.VoidRefAsync), ExpectedResult = typeof(Task), TestName = "Task")]
+        [TestCase(nameof(MethodInvokerTestClass.StringRefAsync), ExpectedResult = typeof(Task<string>), TestName = "Task<string>")]
 #endif
-            var result = invoker.Invoke(instance, new object[] {"1", "a"});
-            Assert.IsNull(result);
-        }
-
-        [TestMethod]
-        public void StringRefSync()
+        public Type ReturnType(string methodName)
         {
             var instance = new MethodInvokerTestClass();
-            var invoker = new MethodInvoker(GetMethod(instance, nameof(instance.StringRefSync)), instance.GetType());
-#if FEATURE_ASYNC
-            Assert.IsFalse(invoker.IsAsync);
-#endif
-            var result = (string) invoker.Invoke(instance, new object[] {"1", "a"});
-            Assert.AreEqual("1a", result);
+            var methodInfo = GetMethod(instance, methodName);
+            var invoker = new MethodInvoker(methodInfo, instance.GetType());
+            return invoker.ReturnType;
         }
 
-        [TestMethod]
-        public void VoidValSync()
+        [Test]
+        public void InstanceType()
         {
             var instance = new MethodInvokerTestClass();
-            var invoker = new MethodInvoker(GetMethod(instance, nameof(instance.VoidValSync)), instance.GetType());
-#if FEATURE_ASYNC
-            Assert.IsFalse(invoker.IsAsync);
-#endif
-            var result = invoker.Invoke(instance, new object[] {1, 2});
-            Assert.IsNull(result);
-        }
-
-        [TestMethod]
-        public void IntValSync()
-        {
-            var instance = new MethodInvokerTestClass();
-            var invoker = new MethodInvoker(GetMethod(instance, nameof(instance.IntValSync)), instance.GetType());
-#if FEATURE_ASYNC
-            Assert.IsFalse(invoker.IsAsync);
-#endif
-            var result = (int) invoker.Invoke(instance, new object[] {1, 2});
-            Assert.AreEqual(3, result);
+            var methodInfo = GetMethod(instance, nameof(MethodInvokerTestClass.TestMethod));
+            var invoker = new MethodInvoker(methodInfo, instance.GetType());
+            Assert.AreEqual(typeof(MethodInvokerTestClass), invoker.InstanceType);
         }
 
 #if FEATURE_ASYNC
-        [TestMethod]
-        public void VoidRefAsync()
+        [TestCase(nameof(MethodInvokerTestClass.VoidRefAsync), new object[] {"1", "a"}, ExpectedResult = null, TestName = "Reference type, returns void, async method")]
+        [TestCase(nameof(MethodInvokerTestClass.StringRefAsync), new object[] {"1", "a"}, ExpectedResult = "1a", TestName = "Reference type, returns string, async method")]
+        [TestCase(nameof(MethodInvokerTestClass.VoidValAsync), new object[] {1, 2}, ExpectedResult = null, TestName = "Value type, returns void, async method")]
+        [TestCase(nameof(MethodInvokerTestClass.IntValAsync), new object[] {1, 2}, ExpectedResult = 3, TestName = "Value type, returns int, async method")]
+        public object InvokeAsync(string methodName, object[] parameters)
         {
             var instance = new MethodInvokerTestClass();
-            var invoker = new MethodInvoker(GetMethod(instance, nameof(instance.VoidRefAsync)), instance.GetType());
-            Assert.IsTrue(invoker.IsAsync);
-            var task = Task.Run(() => invoker.InvokeAsync(instance, new object[] {"1", "a"}));
+            var methodInfo = GetMethod(instance, methodName);
+            var invoker = new MethodInvoker(methodInfo, instance.GetType());
+            var task = Task.Run(() => invoker.InvokeAsync(instance, parameters));
             task.Wait();
-            var result = task.Result;
-            Assert.AreEqual(null, result);
+            return task.Result;
         }
 
-        [TestMethod]
-        public void StringRefAsync()
+        [Test]
+        public void InvokeAsyncSynchronously()
         {
             var instance = new MethodInvokerTestClass();
-            var invoker = new MethodInvoker(GetMethod(instance, nameof(instance.StringRefAsync)), instance.GetType());
-            Assert.IsTrue(invoker.IsAsync);
-            var task = Task.Run(() => invoker.InvokeAsync(instance, new object[] {"1", "a"}));
+            var methodInfo = GetMethod(instance, nameof(MethodInvokerTestClass.StringRefAsync));
+            var invoker = new MethodInvoker(methodInfo, instance.GetType());
+            var task = (Task<string>) invoker.Invoke(instance, new object[] {"1", "a"});
             task.Wait();
-            var result = (string) task.Result;
-            Assert.AreEqual("1a", result);
+            Assert.AreEqual("1a", task.Result);
         }
 
-        [TestMethod]
-        public void VoidValAsync()
+        [Test]
+        public void InvokeSyncAsynchronously()
         {
             var instance = new MethodInvokerTestClass();
-            var invoker = new MethodInvoker(GetMethod(instance, nameof(instance.VoidValAsync)), instance.GetType());
-            Assert.IsTrue(invoker.IsAsync);
-            var task = Task.Run(() => invoker.InvokeAsync(instance, new object[] {1, 2}));
+            var methodInfo = GetMethod(instance, nameof(MethodInvokerTestClass.StringRefSync));
+            var invoker = new MethodInvoker(methodInfo, instance.GetType());
+            var task = invoker.InvokeAsync(instance, new object[] {"1", "a"});
             task.Wait();
-            var result = task.Result;
-            Assert.AreEqual(null, result);
+            Assert.AreEqual("1a", task.Result);
         }
 
-        [TestMethod]
-        public void IntValAsync()
+        [TestCase(nameof(MethodInvokerTestClass.VoidRefSync), ExpectedResult = false, TestName = "Sync")]
+        [TestCase(nameof(MethodInvokerTestClass.VoidRefAsync), ExpectedResult = true, TestName = "Async")]
+        public bool IsAsync(string methodName)
         {
             var instance = new MethodInvokerTestClass();
-            var invoker = new MethodInvoker(GetMethod(instance, nameof(instance.IntValAsync)), instance.GetType());
-            Assert.IsTrue(invoker.IsAsync);
-            var task = Task.Run(() => invoker.InvokeAsync(instance, new object[] {1, 2}));
-            task.Wait();
-            var result = (int) task.Result;
-            Assert.AreEqual(3, result);
+            var methodInfo = GetMethod(instance, methodName);
+            var invoker = new MethodInvoker(methodInfo, instance.GetType());
+            return invoker.IsAsync;
         }
 #endif
 
@@ -155,5 +158,15 @@ namespace HttpLight.Test
             return Task.Run(() => p1 + p2);
         }
 #endif
+
+        public string TestMethod(int x, [MethodInvokerTest] long y)
+        {
+            return null;
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Parameter)]
+    public class MethodInvokerTestAttribute : Attribute
+    {
     }
 }

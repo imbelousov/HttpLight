@@ -6,7 +6,11 @@ using System.Threading;
 
 namespace HttpLight.Utils
 {
-    internal static class SafeStringConvert
+    /// <summary>
+    /// Converts string value to instance of known type or default value. Throws exception only in case when
+    /// specified type is not supported. Check if type is supported with <see cref="IsTypeSupported"/> before conversion.
+    /// </summary>
+    public static class SafeStringConvert
     {
         private static IDictionary<Type, Converter> _converters;
 
@@ -46,11 +50,25 @@ namespace HttpLight.Utils
             _converters[typeof(Guid?)] = ToNullableGuid;
         }
 
+        /// <summary>
+        /// Checks if specified type is supported
+        /// </summary>
+        public static bool IsTypeSupported(Type type)
+        {
+            return _converters.ContainsKey(type);
+        }
+
+        /// <summary>
+        /// Converts string to instance of specified type or default value
+        /// </summary>
         public static object ChangeType(string s, Type type)
         {
             return ChangeType(s, type, Thread.CurrentThread.CurrentCulture);
         }
 
+        /// <summary>
+        /// Converts string to instance of specified type or default value
+        /// </summary>
         public static object ChangeType(string s, Type type, IFormatProvider provider)
         {
             Converter converter;
@@ -59,16 +77,27 @@ namespace HttpLight.Utils
             return converter(s, provider);
         }
 
-        public static object[] ChangeType(string[] array, Type type)
+        /// <summary>
+        /// Converts string array to instance of array of specified type or null
+        /// </summary>
+        public static object ChangeType(string[] array, Type type)
         {
             return ChangeType(array, type, Thread.CurrentThread.CurrentCulture);
         }
 
-        public static object[] ChangeType(string[] array, Type type, IFormatProvider provider)
+        /// <summary>
+        /// Converts string array to instance of array of specified type or null
+        /// </summary>
+        public static object ChangeType(string[] array, Type type, IFormatProvider provider)
         {
-            var result = new object[array.Length];
+            if (array == null)
+                return null;
+            var result = Array.CreateInstance(type, array.Length);
             for (var i = 0; i < array.Length; i++)
-                result[i] = ChangeType(array[i], type, provider);
+            {
+                var item = ChangeType(array[i], type, provider);
+                result.SetValue(item, i);
+            }
             return result;
         }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using HttpLight.Utils;
 #if FEATURE_ASYNC
@@ -12,6 +13,7 @@ namespace HttpLight
     {
         private RouteCollection _routes;
         private InstanceCollection _moduleInstances;
+        private ActionBinderFactory _binderFactory;
 
         public RouteCollection Routes
         {
@@ -22,6 +24,7 @@ namespace HttpLight
         {
             _routes = new RouteCollection();
             _moduleInstances = new InstanceCollection();
+            _binderFactory = new ActionBinderFactory();
         }
 
         public void HandleRequest(HttpListenerContext context)
@@ -36,18 +39,33 @@ namespace HttpLight
             {
                 var request = new HttpRequest(context.Request);
                 var response = new HttpResponse(context.Response);
-                var route = _routes.Get(request.HttpMethod, request.Url.LocalPath);
+                bool methodNotAllowed;
+                var route = _routes.Get(request.HttpMethod, request.Url.LocalPath, out methodNotAllowed);
                 if (route != null)
                 {
                     var instance = (HttpModule) _moduleInstances.GetObjectForThread(route.ActionInvoker.InstanceType);
                     instance.InternalRequest = request;
                     instance.InternalResponse = response;
                     var parameters = GetActionParameters(request, route.ActionInvoker.Parameters);
-                    var result = route.ActionInvoker.IsAsync
-                        ? await route.ActionInvoker.InvokeAsync(instance, parameters)
-                        : route.ActionInvoker.Invoke(instance, parameters);
-                    var resultStream = StreamHelper.ObjectToStream(result, route.ActionInfo);
-                    await resultStream.CopyToAsync(stream);
+                    try
+                    {
+                        response.StatusCode = HttpStatusCode.Ok;
+                        var result = route.ActionInvoker.IsAsync
+                            ? await route.ActionInvoker.InvokeAsync(instance, parameters)
+                            : route.ActionInvoker.Invoke(instance, parameters);
+                        var resultStream = StreamHelper.ObjectToStream(result, route.ActionInfo);
+                        await resultStream.CopyToAsync(stream);
+                    }
+                    catch (Exception e)
+                    {
+                        response.StatusCode = HttpStatusCode.InternalServerError;
+                    }
+                }
+                else
+                {
+                    response.StatusCode = methodNotAllowed
+                        ? HttpStatusCode.MethodNotAllowed
+                        : HttpStatusCode.NotFound;
                 }
             }
         }
@@ -59,27 +77,10 @@ namespace HttpLight
             for (var i = 0; i < actionParameters.Count; i++)
             {
                 var parameter = actionParameters[i];
-                var values = request.UrlParameters.GetValues(parameter.Name);
-                if (!parameter.Type.IsArray)
+                var binder = _binderFactory.GetBinder(parameter.Type, parameter.Attributes);
+                if (binder != null)
                 {
-                    if (values == null || values.Length == 0)
-                        result[i] = SafeStringConvert.ChangeType(null as string, parameter.Type);
-                    else
-                        result[i] = SafeStringConvert.ChangeType(values[0], parameter.Type);
-                }
-                else if (parameter.Type.GetArrayRank() == 1)
-                {
-                    var elementType = parameter.Type.GetElementType();
-                    if (values == null || values.Length == 0)
-                        result[i] = Array.CreateInstance(elementType, 0);
-                    else
-                    {
-                        var converted = SafeStringConvert.ChangeType(values, elementType);
-                        var array = Array.CreateInstance(elementType, converted.Length);
-                        for (var j = 0; j < converted.Length; j++)
-                            array.SetValue(converted[j], j);
-                        result[i] = array;
-                    }
+                    result[i] = binder.Bind(parameter.Type, parameter.Name, request);
                 }
             }
             return result;

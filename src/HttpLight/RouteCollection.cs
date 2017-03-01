@@ -31,14 +31,17 @@ namespace HttpLight
             _statusCodePages[statusCode] = route;
         }
 
-        public Route Get(HttpMethod httpMethod, string path)
+        public Route Get(HttpMethod httpMethod, string path, out bool methodNotAllowed)
         {
             path = NormalizePath(path);
             IDictionary<HttpMethod, Route> innerDictionary;
             if (!_actions.TryGetValue(path, out innerDictionary))
+            {
+                methodNotAllowed = false;
                 return null;
+            }
             Route result;
-            innerDictionary.TryGetValue(httpMethod, out result);
+            methodNotAllowed = !innerDictionary.TryGetValue(httpMethod, out result);
             return result;
         }
 

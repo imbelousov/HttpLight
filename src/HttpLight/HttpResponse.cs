@@ -9,6 +9,12 @@ namespace HttpLight
     {
         private HttpListenerResponse _innerResponse;
 
+        public HttpStatusCode StatusCode
+        {
+            get { return (HttpStatusCode) _innerResponse.StatusCode; }
+            set { _innerResponse.StatusCode = (int) value; }
+        }
+
         public HttpResponse(HttpListenerResponse innerResponse)
         {
             _innerResponse = innerResponse;

@@ -81,7 +81,12 @@ namespace HttpLight.Utils
         {
             return methodInfo
                 .GetParameters()
-                .Select(x => new MethodParameter {Type = x.ParameterType, Name = x.Name})
+                .Select(x => new MethodParameter
+                {
+                    Type = x.ParameterType,
+                    Name = x.Name,
+                    Attributes = x.GetCustomAttributes().ToArray()
+                })
                 .ToArray();
         }
 
@@ -149,5 +154,6 @@ namespace HttpLight.Utils
     {
         public Type Type { get; set; }
         public string Name { get; set; }
+        public Attribute[] Attributes { get; set; }
     }
 }

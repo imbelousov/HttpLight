@@ -18,8 +18,9 @@ namespace HttpLight
         private Thread _acceptThread;
         private TimeSpan _acceptTimeout;
         private bool _isDisposed;
-        private RequestHandler _requestHandler;
         private ModuleCollection _modules;
+        private HostCollection _hosts;
+        private RequestStateMachine _requestStateMachine;
 
         public bool IsStarted
         {
@@ -45,11 +46,17 @@ namespace HttpLight
             get { return _modules; }
         }
 
+        public HostCollection Hosts
+        {
+            get { return _hosts; }
+        }
+
         public HttpServer()
         {
             AcceptTimeout = DefaultAcceptTimeout;
-            _requestHandler = new RequestHandler();
-            _modules = new ModuleCollection(_requestHandler.Routes);
+            _requestStateMachine = new RequestStateMachine();
+            _modules = new ModuleCollection(_requestStateMachine.Routes);
+            _hosts = new HostCollection();
         }
 
         public void Start()
@@ -59,6 +66,8 @@ namespace HttpLight
             if (IsStarted)
                 return;
             _httpListener = new HttpListener();
+            foreach (var hostEntry in _hosts)
+                _httpListener.Prefixes.Add(hostEntry.ToString());
             _httpListener.Start();
             _acceptThread = new Thread(AcceptThread)
             {
@@ -100,10 +109,11 @@ namespace HttpLight
                     {
                         return;
                     }
+                    var httpContext = new HttpContext(context);
 #if FEATURE_ASYNC
-                    Task.Run(() => _requestHandler.HandleRequestAsync(context));
+                    Task.Run(() => _requestStateMachine.StartAsync(httpContext));
 #else
-                    ThreadPool.QueueUserWorkItem(x => _requestHandler.HandleRequest(context));
+                    ThreadPool.QueueUserWorkItem(x => _requestStateMachine.Start(httpContext));
 #endif
                 }, _httpListener);
                 task.AsyncWaitHandle.WaitOne(new TimeSpan(0, 0, 1));

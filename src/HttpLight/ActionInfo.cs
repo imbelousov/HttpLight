@@ -18,6 +18,7 @@ namespace HttpLight
             HttpMethods = new HashSet<HttpMethod>();
             HttpStatusCodes = new HashSet<HttpStatusCode>();
             Paths = new HashSet<string>();
+            Encoding = Encoding.UTF8;
         }
     }
 }

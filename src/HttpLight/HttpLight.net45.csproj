@@ -34,6 +34,7 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
+    <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -46,13 +47,14 @@
     <Compile Include="ActionInfo.cs" />
     <Compile Include="Attributes\ActionAttribute.cs" />
     <Compile Include="Attributes\BinderAttribute.cs" />
-    <Compile Include="Attributes\EncodingAttribute.cs" />
     <Compile Include="Attributes\StatusCodeAttribute.cs" />
     <Compile Include="Attributes\PathAttribute.cs" />
     <Compile Include="Attributes\PostAttribute.cs" />
     <Compile Include="Attributes\GetAttribute.cs" />
+    <Compile Include="DefaultModule.cs" />
     <Compile Include="DotNetTypeBinder.cs" />
     <Compile Include="HostCollection.cs" />
+    <Compile Include="HttpContentType.cs" />
     <Compile Include="HttpRequest.cs" />
     <Compile Include="HttpResponse.cs" />
     <Compile Include="HttpStatusCode.cs" />
@@ -70,6 +72,15 @@
     <Compile Include="Utils\InstanceCollection.cs" />
     <Compile Include="Utils\SafeStringConvert.cs" />
     <Compile Include="Utils\StreamHelper.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Views\404.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Views\405.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Views\500.html" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

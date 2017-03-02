@@ -52,6 +52,12 @@ namespace HttpLight
             return result;
         }
 
+        public void Clear()
+        {
+            _actions.Clear();
+            _statusCodePages.Clear();
+        }
+
         private string NormalizePath(string path)
         {
             path = path.ToLower();

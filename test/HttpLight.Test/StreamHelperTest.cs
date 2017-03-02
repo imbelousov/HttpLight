@@ -22,23 +22,12 @@ namespace HttpLight.Test
             }
         }
 
-        private ActionInfo ActionInfo
-        {
-            get
-            {
-                return new ActionInfo(null)
-                {
-                    Encoding = Encoding.UTF8
-                };
-            }
-        }
-
         [TestCaseSource(nameof(ObjectToStreamData))]
         public void ObjectToStream(object input, Type baseType, byte[] expectedOutput)
         {
             var stream = baseType != null
-                ? StreamHelper.ObjectToStream(input, ActionInfo, baseType)
-                : StreamHelper.ObjectToStream(input, ActionInfo);
+                ? StreamHelper.ObjectToStream(input, Encoding.UTF8, baseType)
+                : StreamHelper.ObjectToStream(input, Encoding.UTF8);
             var bytes = StreamToBytes(stream);
             CollectionAssert.AreEqual(expectedOutput, bytes);
         }

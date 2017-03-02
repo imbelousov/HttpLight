@@ -184,7 +184,7 @@ namespace HttpLight
             try
             {
                 var result = context.Route.ActionInvoker.Invoke(instance, parameters);
-                var stream = StreamHelper.ObjectToStream(result, context.Route.ActionInfo, context.Route.ActionInvoker.ReturnType);
+                var stream = StreamHelper.ObjectToStream(result, context.HttpResponse.ContentEncoding, context.Route.ActionInvoker.ReturnType);
                 context.Result = stream;
                 return RequestState.SendResponse;
             }
@@ -208,7 +208,7 @@ namespace HttpLight
                 var result = context.Route.ActionInvoker.IsAsync
                     ? await context.Route.ActionInvoker.InvokeAsync(instance, parameters)
                     : context.Route.ActionInvoker.Invoke(instance, parameters);
-                var stream = StreamHelper.ObjectToStream(result, context.Route.ActionInfo, context.Route.ActionInvoker.ReturnType);
+                var stream = StreamHelper.ObjectToStream(result, context.HttpResponse.ContentEncoding, context.Route.ActionInvoker.ReturnType);
                 context.Result = stream;
                 return RequestState.SendResponse;
             }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Text;
 
 namespace HttpLight
 {
@@ -21,6 +22,24 @@ namespace HttpLight
         {
             get { return _exception; }
             internal set { _exception = value; }
+        }
+
+        public Encoding ContentEncoding
+        {
+            get { return _innerResponse.ContentEncoding; }
+            set { _innerResponse.ContentEncoding = ContentEncoding; }
+        }
+
+        public string ContentType
+        {
+            get { return _innerResponse.ContentType; }
+            set { _innerResponse.ContentType = value; }
+        }
+
+        public long ContentLength
+        {
+            get { return _innerResponse.ContentLength64; }
+            set { _innerResponse.ContentLength64 = value; }
         }
 
         internal HttpListenerResponse InnerResponse

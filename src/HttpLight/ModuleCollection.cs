@@ -52,6 +52,12 @@ namespace HttpLight
             Add(typeof(T));
         }
 
+        public void Clear()
+        {
+            _routes.Clear();
+            _modules.Clear();
+        }
+
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();

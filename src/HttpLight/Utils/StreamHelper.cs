@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 namespace HttpLight.Utils
 {
@@ -16,33 +17,33 @@ namespace HttpLight.Utils
             _converters[typeof(byte[])] = FromByteArray;
         }
 
-        public static Stream ObjectToStream(object obj, ActionInfo action, Type baseType = null)
+        public static Stream ObjectToStream(object obj, Encoding encoding, Type baseType = null)
         {
             if (obj == null)
                 return new MemoryStream(new byte[0]);
             var type = baseType ?? obj.GetType();
             StreamConverter converter;
             if (!_converters.TryGetValue(type, out converter))
-                return new MemoryStream(action.Encoding.GetBytes(obj.GetType().FullName));
-            return converter(obj, action);
+                return new MemoryStream(encoding.GetBytes(obj.GetType().FullName));
+            return converter(obj, encoding);
         }
 
-        private static Stream FromStream(object obj, ActionInfo action)
+        private static Stream FromStream(object obj, Encoding encoding)
         {
             return (Stream) obj;
         }
 
-        private static Stream FromString(object obj, ActionInfo action)
+        private static Stream FromString(object obj, Encoding encoding)
         {
-            var buf = action.Encoding.GetBytes((string) obj);
+            var buf = encoding.GetBytes((string) obj);
             return new MemoryStream(buf);
         }
 
-        private static Stream FromByteArray(object obj, ActionInfo action)
+        private static Stream FromByteArray(object obj, Encoding encoding)
         {
             return new MemoryStream((byte[]) obj);
         }
     }
 
-    internal delegate Stream StreamConverter(object obj, ActionInfo action);
+    internal delegate Stream StreamConverter(object obj, Encoding encoding);
 }

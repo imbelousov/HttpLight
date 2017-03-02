@@ -57,6 +57,7 @@ namespace HttpLight
             _requestStateMachine = new RequestStateMachine();
             _modules = new ModuleCollection(_requestStateMachine.Routes);
             _hosts = new HostCollection();
+            _modules.Add<DefaultModule>();
         }
 
         public void Start()

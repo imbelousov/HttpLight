@@ -8,7 +8,7 @@ namespace HttpLight
     /// <summary>
     /// An <see cref="HttpListenerRequest"/> wrapper
     /// </summary>
-    public class HttpRequest
+    public class HttpRequest : IHttpRequest
     {
         private HttpListenerRequest _innerRequest;
         private HttpMethod _httpMethod;
@@ -33,5 +33,12 @@ namespace HttpLight
             _innerRequest = innerRequest;
             _httpMethod = HttpMethodHelper.Convert(innerRequest.HttpMethod);
         }
+    }
+
+    public interface IHttpRequest
+    {
+        HttpMethod HttpMethod { get; }
+        Uri Url { get; }
+        NameValueCollection UrlParameters { get; }
     }
 }

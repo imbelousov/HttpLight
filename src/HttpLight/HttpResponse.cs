@@ -27,7 +27,7 @@ namespace HttpLight
         public Encoding ContentEncoding
         {
             get { return _innerResponse.ContentEncoding; }
-            set { _innerResponse.ContentEncoding = ContentEncoding; }
+            set { _innerResponse.ContentEncoding = value; }
         }
 
         public string ContentType

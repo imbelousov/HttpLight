@@ -2,7 +2,7 @@
 using HttpLight.Utils;
 using NUnit.Framework;
 
-namespace HttpLight.Test
+namespace HttpLight.Test.UnitTests
 {
     [TestFixture]
     public class InstanceCollectionTest
@@ -37,7 +37,7 @@ namespace HttpLight.Test
         }
     }
 
-    public class InstanceCollectionTestClass
+    internal class InstanceCollectionTestClass
     {
         public string Param { get; }
 

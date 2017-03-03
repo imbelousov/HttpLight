@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Text;
 #if FEATURE_ASYNC
 using System.Threading.Tasks;
 #endif
@@ -11,6 +12,8 @@ namespace HttpLight
 {
     internal class RequestStateMachine : FiniteStateMachine<RequestState, HttpContext>
     {
+        private static readonly Encoding DefaultEncoding = Encoding.UTF8;
+
         private RouteCollection _routes;
         private InstanceCollection _moduleInstances;
         private ActionBinderFactory _binderFactory;
@@ -168,7 +171,15 @@ namespace HttpLight
                 var parameter = actionParameters[i];
                 var binder = _binderFactory.GetBinder(parameter.Type, parameter.Attributes);
                 if (binder != null)
-                    result[i] = binder.Bind(parameter.Type, parameter.Name, request);
+                {
+                    result[i] = binder.Bind(new ActionBinderContext
+                    {
+                        HttpRequest = request,
+                        ParameterName = parameter.Name,
+                        ParameterType = parameter.Type,
+                        ParameterAttributes = parameter.Attributes
+                    });
+                }
                 else if (parameter.Type.IsValueType)
                     result[i] = Activator.CreateInstance(parameter.Type);
             }
@@ -203,6 +214,7 @@ namespace HttpLight
             instance.InternalRequest = context.HttpRequest;
             instance.InternalResponse = context.HttpResponse;
             var parameters = BindParameters(context.HttpRequest, context.Route.ActionInvoker.Parameters);
+            context.HttpResponse.ContentEncoding = DefaultEncoding;
             try
             {
                 var result = context.Route.ActionInvoker.IsAsync

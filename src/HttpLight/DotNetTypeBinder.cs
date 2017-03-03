@@ -1,18 +1,17 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using HttpLight.Utils;
 
 namespace HttpLight
 {
     internal class DotNetTypeBinder : IActionBinder
     {
-        public object Bind(Type parameterType, string parameterName, HttpRequest request)
+        public object Bind(ActionBinderContext actionBinderContext)
         {
-            var values = request.UrlParameters.GetValues(parameterName);
-            if (parameterType.IsArray)
-                return SafeStringConvert.ChangeType(values, parameterType.GetElementType());
+            var values = actionBinderContext.HttpRequest.UrlParameters.GetValues(actionBinderContext.ParameterName);
+            if (actionBinderContext.ParameterType.IsArray)
+                return SafeStringConvert.ChangeType(values, actionBinderContext.ParameterType.GetElementType());
             else
-                return SafeStringConvert.ChangeType(values != null ? values.FirstOrDefault() : null, parameterType);
+                return SafeStringConvert.ChangeType(values != null ? values.FirstOrDefault() : null, actionBinderContext.ParameterType);
         }
     }
 }

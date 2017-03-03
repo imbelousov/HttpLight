@@ -6,7 +6,7 @@ using System.Threading;
 using HttpLight.Utils;
 using NUnit.Framework;
 
-namespace HttpLight.Test
+namespace HttpLight.Test.UnitTests
 {
     [TestFixture]
     public class SafeStringConvertTest

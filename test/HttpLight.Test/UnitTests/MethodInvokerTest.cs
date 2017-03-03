@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using HttpLight.Utils;
 using NUnit.Framework;
 
-namespace HttpLight.Test
+namespace HttpLight.Test.UnitTests
 {
     [TestFixture]
     public class MethodInvokerTest
@@ -117,7 +117,7 @@ namespace HttpLight.Test
         }
     }
 
-    public class MethodInvokerTestClass
+    internal class MethodInvokerTestClass
     {
         public void VoidRefSync(string p1, string p2)
         {
@@ -166,7 +166,7 @@ namespace HttpLight.Test
     }
 
     [AttributeUsage(AttributeTargets.Parameter)]
-    public class MethodInvokerTestAttribute : Attribute
+    internal class MethodInvokerTestAttribute : Attribute
     {
     }
 }

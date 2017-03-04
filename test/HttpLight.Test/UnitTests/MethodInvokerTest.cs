@@ -43,8 +43,8 @@ namespace HttpLight.Test.UnitTests
         [TestCase(nameof(MethodInvokerTestClass.VoidRefSync), ExpectedResult = typeof(void), TestName = "void")]
         [TestCase(nameof(MethodInvokerTestClass.StringRefSync), ExpectedResult = typeof(string), TestName = "string")]
 #if FEATURE_ASYNC
-        [TestCase(nameof(MethodInvokerTestClass.VoidRefAsync), ExpectedResult = typeof(Task), TestName = "Task")]
-        [TestCase(nameof(MethodInvokerTestClass.StringRefAsync), ExpectedResult = typeof(Task<string>), TestName = "Task<string>")]
+        [TestCase(nameof(MethodInvokerTestClass.VoidRefAsync), ExpectedResult = typeof(void), TestName = "Task")]
+        [TestCase(nameof(MethodInvokerTestClass.StringRefAsync), ExpectedResult = typeof(string), TestName = "Task<string>")]
 #endif
         public Type ReturnType(string methodName)
         {
@@ -111,9 +111,9 @@ namespace HttpLight.Test.UnitTests
         }
 #endif
 
-        private MethodInfo GetMethod<T>(T instance, string name)
+        private MethodInfo GetMethod(object instance, string name)
         {
-            return typeof(T).GetMethod(name);
+            return instance.GetType().GetMethod(name);
         }
     }
 

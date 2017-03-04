@@ -4,7 +4,7 @@ using HttpLight.Attributes;
 
 namespace HttpLight
 {
-    internal class DefaultModule : HttpModule
+    internal class DefaultController : Controller
     {
         private MemoryCache _cache = new MemoryCache("StatusCode");
 

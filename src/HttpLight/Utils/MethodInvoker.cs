@@ -18,9 +18,9 @@ namespace HttpLight.Utils
         private Type _returnType;
         private Type _instanceType;
         private Func<object, object[], object> _method;
+        private MethodInfo _methodInfo;
 #if FEATURE_ASYNC
         private bool _isAsync;
-        private Type _asyncArgument;
         private Func<Task, object> _extractResult;
 #endif
 
@@ -46,16 +46,25 @@ namespace HttpLight.Utils
             get { return _instanceType; }
         }
 
+        public MethodInfo MethodInfo
+        {
+            get { return _methodInfo; }
+        }
+
         public MethodInvoker(MethodInfo methodInfo, Type instanceType)
         {
             _parameters = GetParameters(methodInfo);
             _returnType = methodInfo.ReturnType;
             _instanceType = instanceType;
+            _methodInfo = methodInfo;
 #if FEATURE_ASYNC
             _isAsync = _returnType == typeof(Task) || _returnType.IsGenericType && _returnType.GetGenericTypeDefinition() == typeof(Task<>);
-            _asyncArgument = _isAsync && _returnType.IsGenericType ? _returnType.GetGenericArguments().Single() : null;
-            if (_asyncArgument != null)
-                _extractResult = CreateExtractResultMethod(_asyncArgument);
+            if (_isAsync)
+            {
+                _returnType = _isAsync && _returnType.IsGenericType ? _returnType.GetGenericArguments().Single() : typeof(void);
+                if (_returnType != typeof(void))
+                    _extractResult = CreateExtractResultMethod(_returnType);
+            }
 #endif
             _method = CreateMethod(methodInfo, instanceType);
         }
@@ -71,7 +80,7 @@ namespace HttpLight.Utils
             if (!_isAsync)
                 return Task.FromResult(Invoke(instance, parameters));
             var task = (Task) _method(instance, parameters);
-            if (_asyncArgument == null)
+            if (_returnType == typeof(void))
                 return task.ContinueWith(x => null as object);
             return task.ContinueWith(x => _extractResult(x));
         }

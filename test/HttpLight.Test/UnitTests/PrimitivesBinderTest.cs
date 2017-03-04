@@ -13,7 +13,7 @@ namespace HttpLight.Test.UnitTests
         public object Bind(string urlName, string urlValue, string parameterName, Type type)
         {
             var binder = new PrimitivesBinder();
-            var context = new ActionBinderContext
+            var context = new ActionParameterBinderContext
             {
                 HttpRequest = new FakeHttpRequest(),
                 ParameterAttributes = new Attribute[0],
@@ -30,7 +30,7 @@ namespace HttpLight.Test.UnitTests
         {
             const string name = "a";
             var binder = new PrimitivesBinder();
-            var context = new ActionBinderContext
+            var context = new ActionParameterBinderContext
             {
                 HttpRequest = new FakeHttpRequest(),
                 ParameterAttributes = new Attribute[0],

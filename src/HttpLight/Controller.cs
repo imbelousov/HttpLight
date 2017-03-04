@@ -3,7 +3,7 @@
     /// <summary>
     /// Provides modular application architecture, contains user actions
     /// </summary>
-    public abstract class HttpModule
+    public abstract class Controller
     {
         private IHttpRequest _request;
         private IHttpResponse _response;

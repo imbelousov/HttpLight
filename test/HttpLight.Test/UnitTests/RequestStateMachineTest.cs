@@ -30,26 +30,26 @@ namespace HttpLight.Test.UnitTests
             var stateMachine = new RequestStateMachine();
             var context = CreateContext();
             var state = stateMachine.Begin(context);
-            Assert.AreEqual(RequestState.SelectAction, state);
+            Assert.AreEqual(RequestState.SelectUsualAction, state);
         }
 
         [Test]
         public void SelectAction_Exist()
         {
             var stateMachine = new RequestStateMachine();
-            InitRoutes(stateMachine);
+            InitActions(stateMachine);
             var context = CreateContext(GetUrl);
-            var state = stateMachine.SelectAction(context);
-            Assert.AreEqual(RequestState.InvokeAction, state);
+            var state = stateMachine.SelectUsualAction(context);
+            Assert.AreEqual(RequestState.InvokeUsualAction, state);
         }
 
         [Test]
         public void SelectAction_NotExist()
         {
             var stateMachine = new RequestStateMachine();
-            InitRoutes(stateMachine);
+            InitActions(stateMachine);
             var context = CreateContext(NotExistUrl);
-            var state = stateMachine.SelectAction(context);
+            var state = stateMachine.SelectUsualAction(context);
             Assert.AreEqual(RequestState.SelectStatusCodeAction, state);
             Assert.AreEqual(HttpStatusCode.NotFound, context.HttpResponse.StatusCode);
         }
@@ -58,9 +58,9 @@ namespace HttpLight.Test.UnitTests
         public void SelectAction_InvalidMethod()
         {
             var stateMachine = new RequestStateMachine();
-            InitRoutes(stateMachine);
+            InitActions(stateMachine);
             var context = CreateContext(GetUrl, HttpMethod.Post);
-            var state = stateMachine.SelectAction(context);
+            var state = stateMachine.SelectUsualAction(context);
             Assert.AreEqual(RequestState.SelectStatusCodeAction, state);
             Assert.AreEqual(HttpStatusCode.MethodNotAllowed, context.HttpResponse.StatusCode);
         }
@@ -69,11 +69,11 @@ namespace HttpLight.Test.UnitTests
         public void InvokeAction_Success()
         {
             var stateMachine = new RequestStateMachine();
-            InitRoutes(stateMachine);
+            InitActions(stateMachine);
             bool methodNotAllowed;
             var context = CreateContext(GetUrl);
-            context.Route = stateMachine.Routes.Get(HttpMethod.Get, context.HttpRequest.Url.LocalPath, out methodNotAllowed);
-            var state = stateMachine.InvokeAction(context);
+            context.Action = stateMachine.Actions.Get(HttpMethod.Get, context.HttpRequest.Url.LocalPath, out methodNotAllowed);
+            var state = stateMachine.InvokeUsualAction(context);
             var result = StreamToString(context.Result);
             Assert.AreEqual(RequestState.SendResponse, state);
             Assert.AreEqual(HttpMethod.Get.ToString(), result);
@@ -83,11 +83,11 @@ namespace HttpLight.Test.UnitTests
         public void InvokeAction_Error()
         {
             var stateMachine = new RequestStateMachine();
-            InitRoutes(stateMachine);
+            InitActions(stateMachine);
             bool methodNotAllowed;
             var context = CreateContext(ErrorGetUrl);
-            context.Route = stateMachine.Routes.Get(HttpMethod.Get, context.HttpRequest.Url.LocalPath, out methodNotAllowed);
-            var state = stateMachine.InvokeAction(context);
+            context.Action = stateMachine.Actions.Get(HttpMethod.Get, context.HttpRequest.Url.LocalPath, out methodNotAllowed);
+            var state = stateMachine.InvokeUsualAction(context);
             Assert.IsNull(context.Result);
             Assert.AreEqual(RequestState.SelectStatusCodeAction, state);
             Assert.AreEqual(HttpStatusCode.InternalServerError, context.HttpResponse.StatusCode);
@@ -99,11 +99,11 @@ namespace HttpLight.Test.UnitTests
         public void InvokeActionAsync_Success(string url)
         {
             var stateMachine = new RequestStateMachine();
-            InitRoutes(stateMachine);
+            InitActions(stateMachine);
             bool methodNotAllowed;
             var context = CreateContext(url);
-            context.Route = stateMachine.Routes.Get(HttpMethod.Get, context.HttpRequest.Url.LocalPath, out methodNotAllowed);
-            var state = stateMachine.InvokeActionAsync(context).Result;
+            context.Action = stateMachine.Actions.Get(HttpMethod.Get, context.HttpRequest.Url.LocalPath, out methodNotAllowed);
+            var state = stateMachine.InvokeUsualActionAsync(context).Result;
             var result = StreamToString(context.Result);
             Assert.AreEqual(RequestState.SendResponse, state);
             Assert.AreEqual(HttpMethod.Get.ToString(), result);
@@ -114,11 +114,11 @@ namespace HttpLight.Test.UnitTests
         public void InvokeActionAsync_Error(string url)
         {
             var stateMachine = new RequestStateMachine();
-            InitRoutes(stateMachine);
+            InitActions(stateMachine);
             bool methodNotAllowed;
             var context = CreateContext(url);
-            context.Route = stateMachine.Routes.Get(HttpMethod.Get, context.HttpRequest.Url.LocalPath, out methodNotAllowed);
-            var state = stateMachine.InvokeActionAsync(context).Result;
+            context.Action = stateMachine.Actions.Get(HttpMethod.Get, context.HttpRequest.Url.LocalPath, out methodNotAllowed);
+            var state = stateMachine.InvokeUsualActionAsync(context).Result;
             Assert.IsNull(context.Result);
             Assert.AreEqual(RequestState.SelectStatusCodeAction, state);
             Assert.AreEqual(HttpStatusCode.InternalServerError, context.HttpResponse.StatusCode);
@@ -130,7 +130,7 @@ namespace HttpLight.Test.UnitTests
         public object SelectStatusCodeAction(object httpStatusCode)
         {
             var stateMachine = new RequestStateMachine();
-            InitRoutes(stateMachine);
+            InitActions(stateMachine);
             var context = CreateContext();
             context.HttpResponse.StatusCode = (HttpStatusCode) httpStatusCode;
             var state = stateMachine.SelectStatusCodeAction(context);
@@ -141,9 +141,9 @@ namespace HttpLight.Test.UnitTests
         public void InvokeStatusCodeAction_Success()
         {
             var stateMachine = new RequestStateMachine();
-            InitRoutes(stateMachine);
+            InitActions(stateMachine);
             var context = CreateContext();
-            context.Route = stateMachine.Routes.Get(HttpStatusCode.NotFound);
+            context.Action = stateMachine.Actions.Get(HttpStatusCode.NotFound);
             var state = stateMachine.InvokeStatusCodeAction(context);
             var result = StreamToString(context.Result);
             Assert.AreEqual(RequestState.SendResponse, state);
@@ -154,9 +154,9 @@ namespace HttpLight.Test.UnitTests
         public void InvokeStatusCodeAction_Error()
         {
             var stateMachine = new RequestStateMachine();
-            InitRoutes(stateMachine);
+            InitActions(stateMachine);
             var context = CreateContext();
-            context.Route = stateMachine.Routes.Get(HttpStatusCode.MethodNotAllowed);
+            context.Action = stateMachine.Actions.Get(HttpStatusCode.MethodNotAllowed);
             var state = stateMachine.InvokeStatusCodeAction(context);
             Assert.IsNull(context.Result);
             Assert.AreEqual(RequestState.SendResponse, state);
@@ -168,9 +168,9 @@ namespace HttpLight.Test.UnitTests
         public string InvokeStatusCodeActionAsync_Success(object httpStatusCode)
         {
             var stateMachine = new RequestStateMachine();
-            InitRoutes(stateMachine);
+            InitActions(stateMachine);
             var context = CreateContext();
-            context.Route = stateMachine.Routes.Get((HttpStatusCode) httpStatusCode);
+            context.Action = stateMachine.Actions.Get((HttpStatusCode) httpStatusCode);
             var state = stateMachine.InvokeStatusCodeActionAsync(context).Result;
             var result = StreamToString(context.Result);
             Assert.AreEqual(RequestState.SendResponse, state);
@@ -182,9 +182,9 @@ namespace HttpLight.Test.UnitTests
         public void InvokeStatusCodeActionAsync_Error(object httpStatusCode)
         {
             var stateMachine = new RequestStateMachine();
-            InitRoutes(stateMachine);
+            InitActions(stateMachine);
             var context = CreateContext();
-            context.Route = stateMachine.Routes.Get((HttpStatusCode) httpStatusCode);
+            context.Action = stateMachine.Actions.Get((HttpStatusCode) httpStatusCode);
             var state = stateMachine.InvokeStatusCodeActionAsync(context).Result;
             Assert.IsNull(context.Result);
             Assert.AreEqual(RequestState.SendResponse, state);
@@ -261,12 +261,12 @@ namespace HttpLight.Test.UnitTests
         public void BindParameters(string url, int? expectedA, int expectedB, int? expectedC, int expectedD)
         {
             var stateMachine = new RequestStateMachine();
-            InitRoutes(stateMachine);
+            InitActions(stateMachine);
             var bindParameters = stateMachine.GetType().GetMethod("BindParameters", BindingFlags.Instance | BindingFlags.NonPublic);
             var context = CreateContext(url);
             bool methodNotAllowed;
-            context.Route = stateMachine.Routes.Get(HttpMethod.Get, new Uri(url).LocalPath, out methodNotAllowed);
-            var parameters = (object[]) bindParameters.Invoke(stateMachine, new object[] {context.HttpRequest, context.Route.ActionInvoker.Parameters});
+            context.Action = stateMachine.Actions.Get(HttpMethod.Get, new Uri(url).LocalPath, out methodNotAllowed);
+            var parameters = (object[]) bindParameters.Invoke(stateMachine, new object[] {context.HttpRequest, context.Action.Invoker.Parameters});
             var a = parameters[0] as CustomModel;
             var b = (int) parameters[1];
             var c = parameters[2] as CustomModel;
@@ -281,33 +281,33 @@ namespace HttpLight.Test.UnitTests
         [TestCase(GetUrl, HttpMethod.Post, ExpectedResult = "", TestName = "Method not allowed")]
         [TestCase(NotExistUrl, HttpMethod.Get, ExpectedResult = nameof(HttpStatusCode.NotFound), TestName = "Not found")]
         [TestCase(ErrorGetUrl, HttpMethod.Get, ExpectedResult = "", TestName = "Error")]
-        public string Complex(string url, object httpMethod)
+        public string Complex(string url, object method)
         {
             var stateMachine = new RequestStateMachine();
-            InitRoutes(stateMachine);
+            InitActions(stateMachine);
             var outputStream = new SavingDataMemoryStream();
-            var context = CreateContext(url, (HttpMethod) httpMethod, outputStream);
+            var context = CreateContext(url, (HttpMethod) method, outputStream);
             stateMachine.Start(context);
             var result = StreamToString(outputStream.DataBeforeDispose);
             return result;
         }
 
-        private RequestStateMachineContext CreateContext(string url = null, HttpMethod httpMethod = HttpMethod.Get, Stream outputStream = null)
+        private RequestStateMachineContext CreateContext(string url = null, HttpMethod method = HttpMethod.Get, Stream outputStream = null)
         {
             var request = string.IsNullOrEmpty(url)
                 ? new FakeHttpRequest()
                 : new FakeHttpRequest(url);
-            request.HttpMethod = httpMethod;
+            request.Method = method;
             var response = new FakeHttpResponse();
             if (outputStream != null)
                 response.OutputStream = outputStream;
             return new RequestStateMachineContext(request, response, response.OutputStream);
         }
 
-        private void InitRoutes(RequestStateMachine stateMachine)
+        private void InitActions(RequestStateMachine stateMachine)
         {
-            var moduleCollection = new ModuleCollection(stateMachine.Routes);
-            moduleCollection.Add<RequestStateMachineTestModule>();
+            var controllers = new ControllerCollection(stateMachine.Actions);
+            controllers.Add<RequestStateMachineTestController>();
         }
 
         private string StreamToString(Stream stream)
@@ -320,7 +320,7 @@ namespace HttpLight.Test.UnitTests
         }
     }
 
-    internal class RequestStateMachineTestModule : HttpModule
+    internal class RequestStateMachineTestController : Controller
     {
         [Get]
         [Path("/Get")]
@@ -377,11 +377,11 @@ namespace HttpLight.Test.UnitTests
 #endif
     }
 
-    internal class CustomBinder : IActionBinder
+    internal class CustomBinder : IActionParameterBinder
     {
-        public object Bind(ActionBinderContext actionBinderContext)
+        public object Bind(ActionParameterBinderContext actionParameterBinderContext)
         {
-            var value = (int) SafeStringConvert.ChangeType(actionBinderContext.HttpRequest.UrlParameters.Get(actionBinderContext.ParameterName), typeof(int));
+            var value = (int) SafeStringConvert.ChangeType(actionParameterBinderContext.HttpRequest.UrlParameters.Get(actionParameterBinderContext.ParameterName), typeof(int));
             return new CustomModel {Value = value};
         }
     }

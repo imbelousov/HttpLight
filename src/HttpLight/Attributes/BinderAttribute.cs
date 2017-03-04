@@ -12,8 +12,8 @@ namespace HttpLight.Attributes
 
         public BinderAttribute(Type binder)
         {
-            if (!typeof(IActionBinder).IsAssignableFrom(binder))
-                throw new ArgumentException(binder.Name + " is not assignable to " + nameof(IActionBinder), nameof(binder));
+            if (!typeof(IActionParameterBinder).IsAssignableFrom(binder))
+                throw new ArgumentException(binder.Name + " is not assignable to " + nameof(IActionParameterBinder), nameof(binder));
             Binder = binder;
         }
     }

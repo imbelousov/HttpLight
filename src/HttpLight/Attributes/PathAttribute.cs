@@ -12,9 +12,9 @@
             Path = path;
         }
 
-        internal override void Apply(ActionInfo actionInfo)
+        internal override void Apply(Action action)
         {
-            actionInfo.Paths.Add(Path);
+            action.Paths.Add(Path);
         }
     }
 }

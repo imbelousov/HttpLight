@@ -54,9 +54,9 @@
   </Choose>
   <ItemGroup>
     <Compile Include="UnitTests\PrimitivesBinderTest.cs" />
-    <Compile Include="UnitTests\ModuleCollectionTest.cs" />
+    <Compile Include="UnitTests\ControllerCollectionTest.cs" />
     <Compile Include="UnitTests\RequestStateMachineTest.cs" />
-    <Compile Include="UnitTests\RouteCollectionTest.cs" />
+    <Compile Include="UnitTests\ActionCollectionTest.cs" />
     <Compile Include="Utils\FakeHttpRequest.cs" />
     <Compile Include="UnitTests\FiniteStateMachineTest.cs" />
     <Compile Include="UnitTests\HttpMethodHelperTest.cs" />

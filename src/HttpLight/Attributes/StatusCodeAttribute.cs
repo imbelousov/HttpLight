@@ -12,9 +12,9 @@
             StatusCode = statusCode;
         }
 
-        internal override void Apply(ActionInfo actionInfo)
+        internal override void Apply(Action action)
         {
-            actionInfo.HttpStatusCodes.Add(StatusCode);
+            action.StatusCodes.Add(StatusCode);
         }
     }
 }

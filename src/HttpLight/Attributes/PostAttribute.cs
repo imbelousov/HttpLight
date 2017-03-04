@@ -5,10 +5,9 @@
     /// </summary>
     public class PostAttribute : ActionAttribute
     {
-        internal override void Apply(ActionInfo actionInfo)
+        internal override void Apply(Action action)
         {
-            if (!actionInfo.HttpMethods.Contains(HttpMethod.Post))
-                actionInfo.HttpMethods.Add(HttpMethod.Post);
+            action.Methods.Add(HttpMethod.Post);
         }
     }
 }

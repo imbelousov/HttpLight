@@ -9,7 +9,7 @@ namespace HttpLight.Test.Utils
         private Uri _url;
         private NameValueCollection _urlParameters;
 
-        public HttpMethod HttpMethod { get; set; }
+        public HttpMethod Method { get; set; }
 
         public Uri Url
         {
@@ -29,12 +29,12 @@ namespace HttpLight.Test.Utils
 
         public FakeHttpRequest(string url)
         {
-            HttpMethod = HttpMethod.Get;
+            Method = HttpMethod.Get;
             Url = new Uri(url);
         }
 
         public FakeHttpRequest()
-            : this("http://localhost:8080/path?param=value")
+            : this("http://localhost:8080/")
         {
         }
     }

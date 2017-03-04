@@ -3,15 +3,15 @@ using HttpLight.Utils;
 
 namespace HttpLight
 {
-    internal class PrimitivesBinder : IActionBinder
+    internal class PrimitivesBinder : IActionParameterBinder
     {
-        public object Bind(ActionBinderContext actionBinderContext)
+        public object Bind(ActionParameterBinderContext context)
         {
-            var values = actionBinderContext.HttpRequest.UrlParameters.GetValues(actionBinderContext.ParameterName);
-            if (actionBinderContext.ParameterType.IsArray)
-                return SafeStringConvert.ChangeType(values, actionBinderContext.ParameterType.GetElementType());
+            var values = context.HttpRequest.UrlParameters.GetValues(context.ParameterName);
+            if (context.ParameterType.IsArray)
+                return SafeStringConvert.ChangeType(values, context.ParameterType.GetElementType());
             else
-                return SafeStringConvert.ChangeType(values != null ? values.FirstOrDefault() : null, actionBinderContext.ParameterType);
+                return SafeStringConvert.ChangeType(values != null ? values.FirstOrDefault() : null, context.ParameterType);
         }
     }
 }

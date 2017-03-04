@@ -5,9 +5,9 @@
     /// </summary>
     public class GetAttribute : ActionAttribute
     {
-        internal override void Apply(ActionInfo actionInfo)
+        internal override void Apply(Action action)
         {
-            actionInfo.HttpMethods.Add(HttpMethod.Get);
+            action.Methods.Add(HttpMethod.Get);
         }
     }
 }

@@ -43,15 +43,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ActionBinderFactory.cs" />
-    <Compile Include="ActionInfo.cs" />
+    <Compile Include="Action.cs" />
+    <Compile Include="ActionParameterBinderFactory.cs" />
     <Compile Include="Attributes\ActionAttribute.cs" />
     <Compile Include="Attributes\BinderAttribute.cs" />
     <Compile Include="Attributes\StatusCodeAttribute.cs" />
     <Compile Include="Attributes\PathAttribute.cs" />
     <Compile Include="Attributes\PostAttribute.cs" />
     <Compile Include="Attributes\GetAttribute.cs" />
-    <Compile Include="DefaultModule.cs" />
+    <Compile Include="DefaultController.cs" />
     <Compile Include="PrimitivesBinder.cs" />
     <Compile Include="HostCollection.cs" />
     <Compile Include="HttpContentType.cs" />
@@ -59,13 +59,13 @@
     <Compile Include="HttpResponse.cs" />
     <Compile Include="HttpStatusCode.cs" />
     <Compile Include="HttpMethod.cs" />
-    <Compile Include="HttpModule.cs" />
+    <Compile Include="Controller.cs" />
     <Compile Include="HttpServer.cs" />
-    <Compile Include="IActionBinder.cs" />
-    <Compile Include="ModuleCollection.cs" />
+    <Compile Include="IActionParameterBinder.cs" />
+    <Compile Include="ControllerCollection.cs" />
     <Compile Include="RequestStateMachine.cs" />
     <Compile Include="Utils\FiniteStateMachine.cs" />
-    <Compile Include="RouteCollection.cs" />
+    <Compile Include="ActionCollection.cs" />
     <Compile Include="Utils\HttpMethodHelper.cs" />
     <Compile Include="Utils\MethodInvoker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

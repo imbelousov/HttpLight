@@ -13,13 +13,13 @@ namespace HttpLight
     {
         private static readonly Encoding DefaultEncoding = Encoding.UTF8;
 
-        private RouteCollection _routes;
-        private InstanceCollection _moduleInstances;
-        private ActionBinderFactory _binderFactory;
+        private ActionCollection _actions;
+        private InstanceCollection _controllers;
+        private ActionParameterBinderFactory _binderFactory;
 
-        public RouteCollection Routes
+        public ActionCollection Actions
         {
-            get { return _routes; }
+            get { return _actions; }
         }
 
         protected override RequestState FirstState
@@ -29,17 +29,17 @@ namespace HttpLight
 
         public RequestStateMachine()
         {
-            _routes = new RouteCollection();
-            _moduleInstances = new InstanceCollection();
-            _binderFactory = new ActionBinderFactory();
+            _actions = new ActionCollection();
+            _controllers = new InstanceCollection();
+            _binderFactory = new ActionParameterBinderFactory();
             AddState(RequestState.Begin, Begin);
-            AddState(RequestState.SelectAction, SelectAction);
-            AddState(RequestState.InvokeAction, InvokeAction);
+            AddState(RequestState.SelectUsualAction, SelectUsualAction);
+            AddState(RequestState.InvokeUsualAction, InvokeUsualAction);
             AddState(RequestState.SelectStatusCodeAction, SelectStatusCodeAction);
             AddState(RequestState.InvokeStatusCodeAction, InvokeStatusCodeAction);
             AddState(RequestState.SendResponse, SendResponse);
 #if FEATURE_ASYNC
-            AddAsyncState(RequestState.InvokeAction, InvokeActionAsync);
+            AddAsyncState(RequestState.InvokeUsualAction, InvokeUsualActionAsync);
             AddAsyncState(RequestState.InvokeStatusCodeAction, InvokeStatusCodeActionAsync);
             AddAsyncState(RequestState.SendResponse, SendResponseAsync);
 #endif
@@ -50,31 +50,31 @@ namespace HttpLight
         /// </summary>
         internal RequestState Begin(RequestStateMachineContext context)
         {
-            return RequestState.SelectAction;
+            return RequestState.SelectUsualAction;
         }
 
         /// <summary>
         /// Attempt to select an appropriate action from collection
         /// </summary>
-        internal RequestState SelectAction(RequestStateMachineContext context)
+        internal RequestState SelectUsualAction(RequestStateMachineContext context)
         {
             bool methodNotAllowed;
-            var route = _routes.Get(context.HttpRequest.HttpMethod, context.HttpRequest.Url.LocalPath, out methodNotAllowed);
-            if (route == null)
+            var action = _actions.Get(context.HttpRequest.Method, context.HttpRequest.Url.LocalPath, out methodNotAllowed);
+            if (action == null)
             {
                 context.HttpResponse.StatusCode = methodNotAllowed
                     ? HttpStatusCode.MethodNotAllowed
                     : HttpStatusCode.NotFound;
                 return RequestState.SelectStatusCodeAction;
             }
-            context.Route = route;
-            return RequestState.InvokeAction;
+            context.Action = action;
+            return RequestState.InvokeUsualAction;
         }
 
         /// <summary>
         /// Attempt to invoke selected action
         /// </summary>
-        internal RequestState InvokeAction(RequestStateMachineContext context)
+        internal RequestState InvokeUsualAction(RequestStateMachineContext context)
         {
             context.HttpResponse.StatusCode = HttpStatusCode.Ok;
             return InvokeAction(context, RequestState.SelectStatusCodeAction);
@@ -84,7 +84,7 @@ namespace HttpLight
         /// <summary>
         /// Attempt to invoke selected action
         /// </summary>
-        internal Task<RequestState> InvokeActionAsync(RequestStateMachineContext context)
+        internal Task<RequestState> InvokeUsualActionAsync(RequestStateMachineContext context)
         {
             context.HttpResponse.StatusCode = HttpStatusCode.Ok;
             return InvokeActionAsync(context, RequestState.SelectStatusCodeAction);
@@ -96,10 +96,10 @@ namespace HttpLight
         /// </summary>
         internal RequestState SelectStatusCodeAction(RequestStateMachineContext context)
         {
-            var route = _routes.Get(context.HttpResponse.StatusCode);
-            if (route == null)
+            var action = _actions.Get(context.HttpResponse.StatusCode);
+            if (action == null)
                 return RequestState.SendResponse;
-            context.Route = route;
+            context.Action = action;
             return RequestState.InvokeStatusCodeAction;
         }
 
@@ -183,7 +183,7 @@ namespace HttpLight
                 var binder = _binderFactory.GetBinder(parameter.Type, parameter.Attributes);
                 if (binder != null)
                 {
-                    result[i] = binder.Bind(new ActionBinderContext
+                    result[i] = binder.Bind(new ActionParameterBinderContext
                     {
                         HttpRequest = request,
                         ParameterName = parameter.Name,
@@ -199,14 +199,14 @@ namespace HttpLight
 
         private RequestState InvokeAction(RequestStateMachineContext context, RequestState failState)
         {
-            var instance = (HttpModule) _moduleInstances.GetObjectForThread(context.Route.ActionInvoker.InstanceType);
+            var instance = (Controller) _controllers.GetObjectForThread(context.Action.Invoker.InstanceType);
             instance.InternalRequest = context.HttpRequest;
             instance.InternalResponse = context.HttpResponse;
-            var parameters = BindParameters(context.HttpRequest, context.Route.ActionInvoker.Parameters);
+            var parameters = BindParameters(context.HttpRequest, context.Action.Invoker.Parameters);
             try
             {
-                var result = context.Route.ActionInvoker.Invoke(instance, parameters);
-                var stream = StreamHelper.ObjectToStream(result, context.HttpResponse.ContentEncoding, context.Route.ActionInvoker.ReturnType);
+                var result = context.Action.Invoker.Invoke(instance, parameters);
+                var stream = StreamHelper.ObjectToStream(result, context.HttpResponse.ContentEncoding, context.Action.Invoker.ReturnType);
                 context.Result = stream;
                 return RequestState.SendResponse;
             }
@@ -221,17 +221,17 @@ namespace HttpLight
 #if FEATURE_ASYNC
         private async Task<RequestState> InvokeActionAsync(RequestStateMachineContext context, RequestState failState)
         {
-            var instance = (HttpModule) _moduleInstances.GetObjectForThread(context.Route.ActionInvoker.InstanceType);
+            var instance = (Controller) _controllers.GetObjectForThread(context.Action.Invoker.InstanceType);
             instance.InternalRequest = context.HttpRequest;
             instance.InternalResponse = context.HttpResponse;
-            var parameters = BindParameters(context.HttpRequest, context.Route.ActionInvoker.Parameters);
+            var parameters = BindParameters(context.HttpRequest, context.Action.Invoker.Parameters);
             context.HttpResponse.ContentEncoding = DefaultEncoding;
             try
             {
-                var result = context.Route.ActionInvoker.IsAsync
-                    ? await context.Route.ActionInvoker.InvokeAsync(instance, parameters)
-                    : context.Route.ActionInvoker.Invoke(instance, parameters);
-                var stream = StreamHelper.ObjectToStream(result, context.HttpResponse.ContentEncoding, context.Route.ActionInvoker.ReturnType);
+                var result = context.Action.Invoker.IsAsync
+                    ? await context.Action.Invoker.InvokeAsync(instance, parameters)
+                    : context.Action.Invoker.Invoke(instance, parameters);
+                var stream = StreamHelper.ObjectToStream(result, context.HttpResponse.ContentEncoding, context.Action.Invoker.ReturnType);
                 context.Result = stream;
                 return RequestState.SendResponse;
             }
@@ -248,8 +248,8 @@ namespace HttpLight
     internal enum RequestState
     {
         Begin,
-        SelectAction,
-        InvokeAction,
+        SelectUsualAction,
+        InvokeUsualAction,
         SelectStatusCodeAction,
         InvokeStatusCodeAction,
         SendResponse,
@@ -261,7 +261,7 @@ namespace HttpLight
         public IHttpRequest HttpRequest { get; }
         public IHttpResponse HttpResponse { get; }
         public Stream OutputStream { get; }
-        public Route Route { get; set; }
+        public Action Action { get; set; }
         public Stream Result { get; set; }
 
         public RequestStateMachineContext(IHttpRequest httpRequest, IHttpResponse httpResponse, Stream outputStream)

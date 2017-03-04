@@ -11,11 +11,11 @@ namespace HttpLight
     public class HttpRequest : IHttpRequest
     {
         private HttpListenerRequest _innerRequest;
-        private HttpMethod _httpMethod;
+        private HttpMethod _method;
 
-        public HttpMethod HttpMethod
+        public HttpMethod Method
         {
-            get { return _httpMethod; }
+            get { return _method; }
         }
 
         public Uri Url
@@ -31,13 +31,13 @@ namespace HttpLight
         public HttpRequest(HttpListenerRequest innerRequest)
         {
             _innerRequest = innerRequest;
-            _httpMethod = HttpMethodHelper.Convert(innerRequest.HttpMethod);
+            _method = HttpMethodHelper.Convert(innerRequest.HttpMethod);
         }
     }
 
     public interface IHttpRequest
     {
-        HttpMethod HttpMethod { get; }
+        HttpMethod Method { get; }
         Uri Url { get; }
         NameValueCollection UrlParameters { get; }
     }

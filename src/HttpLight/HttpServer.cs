@@ -14,17 +14,17 @@ namespace HttpLight
     {
         private static readonly TimeSpan DefaultAcceptTimeout = new TimeSpan(0, 0, 1);
 
-        private HttpListener _httpListener;
+        private HttpListener _listener;
         private Thread _acceptThread;
         private TimeSpan _acceptTimeout;
         private bool _isDisposed;
-        private ModuleCollection _modules;
+        private ControllerCollection _controllers;
         private HostCollection _hosts;
         private RequestStateMachine _requestStateMachine;
 
         public bool IsStarted
         {
-            get { return !_isDisposed && _httpListener != null && _httpListener.IsListening; }
+            get { return !_isDisposed && _listener != null && _listener.IsListening; }
         }
 
         /// <summary>
@@ -41,9 +41,9 @@ namespace HttpLight
             }
         }
 
-        public ModuleCollection Modules
+        public ControllerCollection Controllers
         {
-            get { return _modules; }
+            get { return _controllers; }
         }
 
         public HostCollection Hosts
@@ -55,9 +55,9 @@ namespace HttpLight
         {
             AcceptTimeout = DefaultAcceptTimeout;
             _requestStateMachine = new RequestStateMachine();
-            _modules = new ModuleCollection(_requestStateMachine.Routes);
+            _controllers = new ControllerCollection(_requestStateMachine.Actions);
             _hosts = new HostCollection();
-            _modules.Add<DefaultModule>();
+            _controllers.Add<DefaultController>();
         }
 
         public void Start()
@@ -66,10 +66,10 @@ namespace HttpLight
                 throw new ObjectDisposedException(nameof(HttpServer));
             if (IsStarted)
                 return;
-            _httpListener = new HttpListener();
+            _listener = new HttpListener();
             foreach (var hostEntry in _hosts)
-                _httpListener.Prefixes.Add(hostEntry.ToString());
-            _httpListener.Start();
+                _listener.Prefixes.Add(hostEntry.ToString());
+            _listener.Start();
             _acceptThread = new Thread(AcceptThread)
             {
                 Name = "HttpServer accept thread"
@@ -83,8 +83,8 @@ namespace HttpLight
                 throw new ObjectDisposedException(nameof(HttpServer));
             if (!IsStarted)
                 return;
-            ((IDisposable) _httpListener).Dispose();
-            _httpListener = null;
+            ((IDisposable) _listener).Dispose();
+            _listener = null;
         }
 
         public void Dispose()
@@ -99,12 +99,12 @@ namespace HttpLight
         {
             while (IsStarted)
             {
-                var task = _httpListener.BeginGetContext(ar =>
+                var task = _listener.BeginGetContext(ar =>
                 {
                     HttpListenerContext context;
                     try
                     {
-                        context = _httpListener.EndGetContext(ar);
+                        context = _listener.EndGetContext(ar);
                     }
                     catch
                     {
@@ -120,7 +120,7 @@ namespace HttpLight
 #else
                     ThreadPool.QueueUserWorkItem(x => _requestStateMachine.Start(stateMachineContext));
 #endif
-                }, _httpListener);
+                }, _listener);
                 task.AsyncWaitHandle.WaitOne(new TimeSpan(0, 0, 1));
             }
         }

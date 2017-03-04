@@ -108,7 +108,7 @@ namespace HttpLight.Test.UnitTests
 
         protected override int FirstState
         {
-            get { return 0; }
+            get { return _firstState; }
         }
 
         public LoopingStateMachine(int firstState)

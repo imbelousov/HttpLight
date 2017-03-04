@@ -5,12 +5,12 @@ namespace HttpLight
     /// <summary>
     /// Pulls data from given context and converts it to action parameter
     /// </summary>
-    public interface IActionBinder
+    public interface IActionParameterBinder
     {
-        object Bind(ActionBinderContext actionBinderContext);
+        object Bind(ActionParameterBinderContext context);
     }
 
-    public class ActionBinderContext
+    public class ActionParameterBinderContext
     {
         public Type ParameterType { get; internal set; }
         public string ParameterName { get; internal set; }

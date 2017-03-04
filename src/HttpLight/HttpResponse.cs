@@ -65,10 +65,29 @@ namespace HttpLight
 
     public interface IHttpResponse
     {
+        /// <summary>
+        /// HTTP status code
+        /// </summary>
         HttpStatusCode StatusCode { get; set; }
+
+        /// <summary>
+        /// Instance of occured exception during action invocation
+        /// </summary>
         Exception Exception { get; set; }
+
+        /// <summary>
+        /// Content encoding
+        /// </summary>
         Encoding ContentEncoding { get; set; }
+
+        /// <summary>
+        /// Content type
+        /// </summary>
         string ContentType { get; set; }
+
+        /// <summary>
+        /// Content length
+        /// </summary>
         long? ContentLength { get; set; }
     }
 }

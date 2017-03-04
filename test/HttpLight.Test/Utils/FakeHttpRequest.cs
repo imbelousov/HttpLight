@@ -1,5 +1,9 @@
 ﻿using System;
 using System.Collections.Specialized;
+using System.IO;
+#if FEATURE_ASYNC
+using System.Threading.Tasks;
+#endif
 using System.Web;
 
 namespace HttpLight.Test.Utils
@@ -8,6 +12,8 @@ namespace HttpLight.Test.Utils
     {
         private Uri _url;
         private NameValueCollection _urlParameters;
+
+        public IHttpRequestBody Body { get; }
 
         public HttpMethod Method { get; set; }
 
@@ -29,6 +35,7 @@ namespace HttpLight.Test.Utils
 
         public FakeHttpRequest(string url)
         {
+            Body = new FakeHttpRequestBody();
             Method = HttpMethod.Get;
             Url = new Uri(url);
         }
@@ -37,5 +44,33 @@ namespace HttpLight.Test.Utils
             : this("http://localhost:8080/")
         {
         }
+    }
+
+    internal class FakeHttpRequestBody : IHttpRequestBody
+    {
+        public bool HasBody { get; set; }
+        public Stream Stream { get; set; }
+
+        public string ReadText()
+        {
+            throw new NotImplementedException();
+        }
+
+        public byte[] ReadArray()
+        {
+            throw new NotImplementedException();
+        }
+
+#if FEATURE_ASYNC
+        public Task<string> ReadTextAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<byte[]> ReadArrayAsync()
+        {
+            throw new NotImplementedException();
+        }
+#endif
     }
 }

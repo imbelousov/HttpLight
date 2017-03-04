@@ -99,29 +99,36 @@ namespace HttpLight
         {
             while (IsStarted)
             {
-                var task = _listener.BeginGetContext(ar =>
+                try
                 {
-                    HttpListenerContext context;
-                    try
+                    var task = _listener.BeginGetContext(ar =>
                     {
-                        context = _listener.EndGetContext(ar);
-                    }
-                    catch
-                    {
-                        return;
-                    }
-                    var stateMachineContext = new RequestStateMachineContext(
-                        new HttpRequest(context.Request),
-                        new HttpResponse(context.Response),
-                        context.Response.OutputStream
-                    );
+                        HttpListenerContext context;
+                        try
+                        {
+                            context = _listener.EndGetContext(ar);
+                        }
+                        catch
+                        {
+                            return;
+                        }
+                        var stateMachineContext = new RequestStateMachineContext(
+                            new HttpRequest(context.Request),
+                            new HttpResponse(context.Response),
+                            context.Response.OutputStream
+                        );
 #if FEATURE_ASYNC
-                    Task.Run(() => _requestStateMachine.StartAsync(stateMachineContext));
+                        Task.Run(() => _requestStateMachine.StartAsync(stateMachineContext));
 #else
-                    ThreadPool.QueueUserWorkItem(x => _requestStateMachine.Start(stateMachineContext));
+                        ThreadPool.QueueUserWorkItem(x => _requestStateMachine.Start(stateMachineContext));
 #endif
-                }, _listener);
-                task.AsyncWaitHandle.WaitOne(new TimeSpan(0, 0, 1));
+                    }, _listener);
+                    task.AsyncWaitHandle.WaitOne(new TimeSpan(0, 0, 1));
+                }
+                catch
+                {
+                    break;
+                }
             }
         }
     }

@@ -23,7 +23,7 @@ namespace HttpLight
             if (binderAttribute != null)
                 binderType = binderAttribute.Binder;
             else if (SafeStringConvert.IsTypeSupported(parameterType))
-                binderType = typeof(DotNetTypeBinder);
+                binderType = typeof(PrimitivesBinder);
             else
                 binderType = null;
             if (binderType == null)

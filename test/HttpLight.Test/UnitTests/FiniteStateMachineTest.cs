@@ -42,7 +42,7 @@ namespace HttpLight.Test.UnitTests
         {
             var stateMachine = new LoopingStateMachine(0);
             var context = new List<int>();
-            Assert.Throws<Exception>(() => stateMachine.Start(context), "Infinite loop detected");
+            Assert.Throws<Exception>(() => stateMachine.Start(context));
         }
 
 #if FEATURE_ASYNC
@@ -60,7 +60,7 @@ namespace HttpLight.Test.UnitTests
         {
             var stateMachine = new LoopingStateMachine(1);
             var context = new List<int>();
-            Assert.Throws<AggregateException>(() => stateMachine.StartAsync(context).Wait(), "Infinite loop detected");
+            Assert.Throws<AggregateException>(() => stateMachine.StartAsync(context).Wait());
         }
 
         [Test]

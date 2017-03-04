@@ -31,6 +31,8 @@ namespace HttpLight
                 var actionInvoker = null as MethodInvoker;
                 foreach (var httpMethod in actionInfo.HttpMethods)
                 {
+                    if (!actionInfo.Paths.Any())
+                        actionInfo.Paths.Add(actionInfo.MethodInfo.Name);
                     foreach (var path in actionInfo.Paths)
                     {
                         actionInvoker = actionInvoker ?? new MethodInvoker(actionInfo.MethodInfo, moduleType);

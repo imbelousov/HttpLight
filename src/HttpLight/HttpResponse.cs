@@ -7,7 +7,7 @@ namespace HttpLight
     /// <summary>
     /// An <see cref="HttpListenerResponse"/> wrapper
     /// </summary>
-    public class HttpResponse
+    public class HttpResponse : IHttpResponse
     {
         private HttpListenerResponse _innerResponse;
         private Exception _exception;
@@ -21,7 +21,7 @@ namespace HttpLight
         public Exception Exception
         {
             get { return _exception; }
-            internal set { _exception = value; }
+            set { _exception = value; }
         }
 
         public Encoding ContentEncoding
@@ -36,10 +36,20 @@ namespace HttpLight
             set { _innerResponse.ContentType = value; }
         }
 
-        public long ContentLength
+        public long? ContentLength
         {
-            get { return _innerResponse.ContentLength64; }
-            set { _innerResponse.ContentLength64 = value; }
+            get
+            {
+                return _innerResponse.ContentLength64 >= 0
+                    ? (long?) _innerResponse.ContentLength64
+                    : null;
+            }
+            set
+            {
+                _innerResponse.ContentLength64 = value.HasValue
+                    ? value.Value
+                    : -1;
+            }
         }
 
         internal HttpListenerResponse InnerResponse
@@ -51,5 +61,14 @@ namespace HttpLight
         {
             _innerResponse = innerResponse;
         }
+    }
+
+    public interface IHttpResponse
+    {
+        HttpStatusCode StatusCode { get; set; }
+        Exception Exception { get; set; }
+        Encoding ContentEncoding { get; set; }
+        string ContentType { get; set; }
+        long? ContentLength { get; set; }
     }
 }

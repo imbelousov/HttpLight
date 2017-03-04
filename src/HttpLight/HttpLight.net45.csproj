@@ -52,7 +52,7 @@
     <Compile Include="Attributes\PostAttribute.cs" />
     <Compile Include="Attributes\GetAttribute.cs" />
     <Compile Include="DefaultModule.cs" />
-    <Compile Include="DotNetTypeBinder.cs" />
+    <Compile Include="PrimitivesBinder.cs" />
     <Compile Include="HostCollection.cs" />
     <Compile Include="HttpContentType.cs" />
     <Compile Include="HttpRequest.cs" />

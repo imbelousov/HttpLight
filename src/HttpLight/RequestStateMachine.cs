@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using System.Text;
 #if FEATURE_ASYNC
 using System.Threading.Tasks;
@@ -10,7 +9,7 @@ using HttpLight.Utils;
 
 namespace HttpLight
 {
-    internal class RequestStateMachine : FiniteStateMachine<RequestState, HttpContext>
+    internal class RequestStateMachine : FiniteStateMachine<RequestState, RequestStateMachineContext>
     {
         private static readonly Encoding DefaultEncoding = Encoding.UTF8;
 
@@ -49,7 +48,7 @@ namespace HttpLight
         /// <summary>
         /// Initial state
         /// </summary>
-        private RequestState Begin(HttpContext context)
+        internal RequestState Begin(RequestStateMachineContext context)
         {
             return RequestState.SelectAction;
         }
@@ -57,7 +56,7 @@ namespace HttpLight
         /// <summary>
         /// Attempt to select an appropriate action from collection
         /// </summary>
-        private RequestState SelectAction(HttpContext context)
+        internal RequestState SelectAction(RequestStateMachineContext context)
         {
             bool methodNotAllowed;
             var route = _routes.Get(context.HttpRequest.HttpMethod, context.HttpRequest.Url.LocalPath, out methodNotAllowed);
@@ -75,7 +74,7 @@ namespace HttpLight
         /// <summary>
         /// Attempt to invoke selected action
         /// </summary>
-        private RequestState InvokeAction(HttpContext context)
+        internal RequestState InvokeAction(RequestStateMachineContext context)
         {
             context.HttpResponse.StatusCode = HttpStatusCode.Ok;
             return InvokeAction(context, RequestState.SelectStatusCodeAction);
@@ -85,7 +84,7 @@ namespace HttpLight
         /// <summary>
         /// Attempt to invoke selected action
         /// </summary>
-        private Task<RequestState> InvokeActionAsync(HttpContext context)
+        internal Task<RequestState> InvokeActionAsync(RequestStateMachineContext context)
         {
             context.HttpResponse.StatusCode = HttpStatusCode.Ok;
             return InvokeActionAsync(context, RequestState.SelectStatusCodeAction);
@@ -95,7 +94,7 @@ namespace HttpLight
         /// <summary>
         /// Attempt to select an appropriate status code action. Usually this is custom 404 or 500 error page.
         /// </summary>
-        private RequestState SelectStatusCodeAction(HttpContext context)
+        internal RequestState SelectStatusCodeAction(RequestStateMachineContext context)
         {
             var route = _routes.Get(context.HttpResponse.StatusCode);
             if (route == null)
@@ -107,7 +106,7 @@ namespace HttpLight
         /// <summary>
         /// Attempt to invoke selected status code action
         /// </summary>
-        private RequestState InvokeStatusCodeAction(HttpContext context)
+        internal RequestState InvokeStatusCodeAction(RequestStateMachineContext context)
         {
             return InvokeAction(context, RequestState.SendResponse);
         }
@@ -116,7 +115,7 @@ namespace HttpLight
         /// <summary>
         /// Attempt to invoke selected status code action
         /// </summary>
-        private Task<RequestState> InvokeStatusCodeActionAsync(HttpContext context)
+        internal Task<RequestState> InvokeStatusCodeActionAsync(RequestStateMachineContext context)
         {
             return InvokeActionAsync(context, RequestState.SendResponse);
         }
@@ -125,45 +124,57 @@ namespace HttpLight
         /// <summary>
         /// Sending previous results
         /// </summary>
-        private RequestState SendResponse(HttpContext context)
+        internal RequestState SendResponse(RequestStateMachineContext context)
         {
             var stream = context.Result ?? new MemoryStream(new byte[0]);
             try
             {
-                stream.CopyTo(context.HttpResponse.InnerResponse.OutputStream);
+                stream.CopyTo(context.OutputStream);
             }
             catch
             {
             }
             finally
             {
-                context.HttpResponse.InnerResponse.OutputStream.Dispose();
-                stream.Dispose();
+                try
+                {
+                    context.OutputStream.Dispose();
+                    stream.Dispose();
+                }
+                catch
+                {
+                }
             }
             return RequestState.End;
         }
 
 #if FEATURE_ASYNC
-        private async Task<RequestState> SendResponseAsync(HttpContext context)
+        internal async Task<RequestState> SendResponseAsync(RequestStateMachineContext context)
         {
             var stream = context.Result ?? new MemoryStream(new byte[0]);
             try
             {
-                await stream.CopyToAsync(context.HttpResponse.InnerResponse.OutputStream);
+                await stream.CopyToAsync(context.OutputStream);
             }
             catch
             {
             }
             finally
             {
-                context.HttpResponse.InnerResponse.OutputStream.Dispose();
-                stream.Dispose();
+                try
+                {
+                    context.OutputStream.Dispose();
+                    stream.Dispose();
+                }
+                catch
+                {
+                }
             }
             return RequestState.End;
         }
 #endif
 
-        private object[] BindParameters(HttpRequest request, IList<MethodParameter> actionParameters)
+        private object[] BindParameters(IHttpRequest request, IList<MethodParameter> actionParameters)
         {
             var result = new object[actionParameters.Count];
             for (var i = 0; i < actionParameters.Count; i++)
@@ -186,7 +197,7 @@ namespace HttpLight
             return result;
         }
 
-        private RequestState InvokeAction(HttpContext context, RequestState failState)
+        private RequestState InvokeAction(RequestStateMachineContext context, RequestState failState)
         {
             var instance = (HttpModule) _moduleInstances.GetObjectForThread(context.Route.ActionInvoker.InstanceType);
             instance.InternalRequest = context.HttpRequest;
@@ -208,7 +219,7 @@ namespace HttpLight
         }
 
 #if FEATURE_ASYNC
-        private async Task<RequestState> InvokeActionAsync(HttpContext context, RequestState failState)
+        private async Task<RequestState> InvokeActionAsync(RequestStateMachineContext context, RequestState failState)
         {
             var instance = (HttpModule) _moduleInstances.GetObjectForThread(context.Route.ActionInvoker.InstanceType);
             instance.InternalRequest = context.HttpRequest;
@@ -245,20 +256,19 @@ namespace HttpLight
         End
     }
 
-    internal class HttpContext
+    internal class RequestStateMachineContext
     {
-        public HttpRequest HttpRequest { get; }
-        public HttpResponse HttpResponse { get; }
+        public IHttpRequest HttpRequest { get; }
+        public IHttpResponse HttpResponse { get; }
+        public Stream OutputStream { get; }
         public Route Route { get; set; }
         public Stream Result { get; set; }
 
-        private HttpListenerContext _innerContext;
-
-        public HttpContext(HttpListenerContext httpListenerContext)
+        public RequestStateMachineContext(IHttpRequest httpRequest, IHttpResponse httpResponse, Stream outputStream)
         {
-            _innerContext = httpListenerContext;
-            HttpRequest = new HttpRequest(httpListenerContext.Request);
-            HttpResponse = new HttpResponse(httpListenerContext.Response);
+            HttpRequest = httpRequest;
+            HttpResponse = httpResponse;
+            OutputStream = outputStream;
         }
     }
 }

@@ -110,7 +110,7 @@ namespace HttpLight.Test.UnitTests
         public void ChangeTypeNotSupported()
         {
             var type = typeof(object);
-            Assert.Throws<Exception>(() => SafeStringConvert.ChangeType("", type), "Type " + type.Name + " is not supported");
+            Assert.Throws<Exception>(() => SafeStringConvert.ChangeType("", type));
         }
 
         [TestCaseSource(nameof(ChangeTypeArrayData))]

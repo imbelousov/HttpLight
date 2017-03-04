@@ -5,14 +5,14 @@ using NUnit.Framework;
 namespace HttpLight.Test.UnitTests
 {
     [TestFixture]
-    public class DotNetTypeBinderTest
+    public class PrimitivesBinderTest
     {
         [TestCase("a", "1", "a", typeof(int), ExpectedResult = 1, TestName = "Value type")]
         [TestCase("a", "asd", "a", typeof(string), ExpectedResult = "asd", TestName = "Reference type")]
         [TestCase("b", "1", "a", typeof(int?), ExpectedResult = null, TestName = "Default value")]
         public object Bind(string urlName, string urlValue, string parameterName, Type type)
         {
-            var binder = new DotNetTypeBinder();
+            var binder = new PrimitivesBinder();
             var context = new ActionBinderContext
             {
                 HttpRequest = new FakeHttpRequest(),
@@ -29,7 +29,7 @@ namespace HttpLight.Test.UnitTests
         public void BindArray()
         {
             const string name = "a";
-            var binder = new DotNetTypeBinder();
+            var binder = new PrimitivesBinder();
             var context = new ActionBinderContext
             {
                 HttpRequest = new FakeHttpRequest(),

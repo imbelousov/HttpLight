@@ -3,7 +3,7 @@ using HttpLight.Utils;
 
 namespace HttpLight
 {
-    internal class DotNetTypeBinder : IActionBinder
+    internal class PrimitivesBinder : IActionBinder
     {
         public object Bind(ActionBinderContext actionBinderContext)
         {

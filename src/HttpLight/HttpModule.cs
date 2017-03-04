@@ -5,16 +5,16 @@
     /// </summary>
     public abstract class HttpModule
     {
-        private HttpRequest _request;
-        private HttpResponse _response;
+        private IHttpRequest _request;
+        private IHttpResponse _response;
 
-        internal HttpRequest InternalRequest
+        internal IHttpRequest InternalRequest
         {
             get { return _request; }
             set { _request = value; }
         }
 
-        internal HttpResponse InternalResponse
+        internal IHttpResponse InternalResponse
         {
             get { return _response; }
             set { _response = value; }
@@ -23,7 +23,7 @@
         /// <summary>
         /// HTTP request info
         /// </summary>
-        protected HttpRequest Request
+        protected IHttpRequest Request
         {
             get { return _request; }
         }
@@ -31,7 +31,7 @@
         /// <summary>
         /// HTTP response info
         /// </summary>
-        protected HttpResponse Response
+        protected IHttpResponse Response
         {
             get { return _response; }
         }

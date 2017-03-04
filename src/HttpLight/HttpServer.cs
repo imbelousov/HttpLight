@@ -110,11 +110,15 @@ namespace HttpLight
                     {
                         return;
                     }
-                    var httpContext = new HttpContext(context);
+                    var stateMachineContext = new RequestStateMachineContext(
+                        new HttpRequest(context.Request),
+                        new HttpResponse(context.Response),
+                        context.Response.OutputStream
+                    );
 #if FEATURE_ASYNC
-                    Task.Run(() => _requestStateMachine.StartAsync(httpContext));
+                    Task.Run(() => _requestStateMachine.StartAsync(stateMachineContext));
 #else
-                    ThreadPool.QueueUserWorkItem(x => _requestStateMachine.Start(httpContext));
+                    ThreadPool.QueueUserWorkItem(x => _requestStateMachine.Start(stateMachineContext));
 #endif
                 }, _httpListener);
                 task.AsyncWaitHandle.WaitOne(new TimeSpan(0, 0, 1));

@@ -53,7 +53,9 @@
     <Otherwise />
   </Choose>
   <ItemGroup>
-    <Compile Include="UnitTests\DotNetTypeBinderTest.cs" />
+    <Compile Include="UnitTests\PrimitivesBinderTest.cs" />
+    <Compile Include="UnitTests\ModuleCollectionTest.cs" />
+    <Compile Include="UnitTests\RequestStateMachineTest.cs" />
     <Compile Include="UnitTests\RouteCollectionTest.cs" />
     <Compile Include="Utils\FakeHttpRequest.cs" />
     <Compile Include="UnitTests\FiniteStateMachineTest.cs" />
@@ -63,6 +65,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UnitTests\SafeStringConvertTest.cs" />
     <Compile Include="UnitTests\StreamHelperTest.cs" />
+    <Compile Include="Utils\FakeHttpResponse.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\HttpLight\HttpLight.net45.csproj">

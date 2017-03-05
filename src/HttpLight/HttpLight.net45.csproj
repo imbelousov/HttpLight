@@ -35,6 +35,7 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Runtime.Caching" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -52,6 +53,8 @@
     <Compile Include="Attributes\PostAttribute.cs" />
     <Compile Include="Attributes\GetAttribute.cs" />
     <Compile Include="DefaultController.cs" />
+    <Compile Include="IHttpRequest.cs" />
+    <Compile Include="IHttpResponse.cs" />
     <Compile Include="PrimitivesBinder.cs" />
     <Compile Include="HostCollection.cs" />
     <Compile Include="HttpContentType.cs" />

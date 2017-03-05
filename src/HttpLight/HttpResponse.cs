@@ -7,27 +7,21 @@ namespace HttpLight
     /// <summary>
     /// An <see cref="HttpListenerResponse"/> wrapper
     /// </summary>
-    public class HttpResponse : IHttpResponse
+    internal class HttpResponse : IHttpResponse
     {
-        private HttpListenerResponse _innerResponse;
         private Exception _exception;
-
-        public HttpStatusCode StatusCode
-        {
-            get { return (HttpStatusCode) _innerResponse.StatusCode; }
-            set { _innerResponse.StatusCode = (int) value; }
-        }
-
-        public Exception Exception
-        {
-            get { return _exception; }
-            set { _exception = value; }
-        }
+        private HttpListenerResponse _innerResponse;
 
         public Encoding ContentEncoding
         {
             get { return _innerResponse.ContentEncoding; }
             set { _innerResponse.ContentEncoding = value; }
+        }
+
+        public long? ContentLength
+        {
+            get { return _innerResponse.ContentLength64 >= 0 ? (long?) _innerResponse.ContentLength64 : null; }
+            set { _innerResponse.ContentLength64 = value.HasValue ? value.Value : -1; }
         }
 
         public string ContentType
@@ -36,20 +30,52 @@ namespace HttpLight
             set { _innerResponse.ContentType = value; }
         }
 
-        public long? ContentLength
+        public CookieCollection Cookies
         {
-            get
-            {
-                return _innerResponse.ContentLength64 >= 0
-                    ? (long?) _innerResponse.ContentLength64
-                    : null;
-            }
-            set
-            {
-                _innerResponse.ContentLength64 = value.HasValue
-                    ? value.Value
-                    : -1;
-            }
+            get { return _innerResponse.Cookies; }
+            set { _innerResponse.Cookies = value; }
+        }
+
+        public Exception Exception
+        {
+            get { return _exception; }
+            set { _exception = value; }
+        }
+
+        public WebHeaderCollection Headers
+        {
+            get { return _innerResponse.Headers; }
+            set { _innerResponse.Headers = value; }
+        }
+
+        public bool KeepAlive
+        {
+            get { return _innerResponse.KeepAlive; }
+            set { _innerResponse.KeepAlive = value; }
+        }
+
+        public Version ProtocolVersion
+        {
+            get { return _innerResponse.ProtocolVersion; }
+            set { _innerResponse.ProtocolVersion = value; }
+        }
+
+        public bool SendChunked
+        {
+            get { return _innerResponse.SendChunked; }
+            set { _innerResponse.SendChunked = value; }
+        }
+
+        public HttpStatusCode StatusCode
+        {
+            get { return (HttpStatusCode) _innerResponse.StatusCode; }
+            set { _innerResponse.StatusCode = (int) value; }
+        }
+
+        public string StatusDescription
+        {
+            get { return _innerResponse.StatusDescription; }
+            set { _innerResponse.StatusDescription = value; }
         }
 
         internal HttpListenerResponse InnerResponse
@@ -61,33 +87,5 @@ namespace HttpLight
         {
             _innerResponse = innerResponse;
         }
-    }
-
-    public interface IHttpResponse
-    {
-        /// <summary>
-        /// HTTP status code
-        /// </summary>
-        HttpStatusCode StatusCode { get; set; }
-
-        /// <summary>
-        /// Instance of occured exception during action invocation
-        /// </summary>
-        Exception Exception { get; set; }
-
-        /// <summary>
-        /// Content encoding
-        /// </summary>
-        Encoding ContentEncoding { get; set; }
-
-        /// <summary>
-        /// Content type
-        /// </summary>
-        string ContentType { get; set; }
-
-        /// <summary>
-        /// Content length
-        /// </summary>
-        long? ContentLength { get; set; }
     }
 }

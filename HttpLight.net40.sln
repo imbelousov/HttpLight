@@ -5,11 +5,7 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpLight.net40", "src\HttpLight\HttpLight.net40.csproj", "{E82D194F-DC15-4B1C-94CA-11203BCB1232}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{F3847317-29DC-4F4E-AC0F-534CEA3E3970}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpLight.Test.net40", "test\HttpLight.Test\HttpLight.Test.net40.csproj", "{629A54A4-372A-4A08-993A-CBF2869F3918}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpLight.Benchmark.net40", "test\HttpLight.Benchmark\HttpLight.Benchmark.net40.csproj", "{A39E8BD7-C609-4F64-887D-DA99A6976D59}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,16 +21,8 @@ Global
 		{629A54A4-372A-4A08-993A-CBF2869F3918}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{629A54A4-372A-4A08-993A-CBF2869F3918}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{629A54A4-372A-4A08-993A-CBF2869F3918}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A39E8BD7-C609-4F64-887D-DA99A6976D59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A39E8BD7-C609-4F64-887D-DA99A6976D59}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A39E8BD7-C609-4F64-887D-DA99A6976D59}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A39E8BD7-C609-4F64-887D-DA99A6976D59}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{629A54A4-372A-4A08-993A-CBF2869F3918} = {F3847317-29DC-4F4E-AC0F-534CEA3E3970}
-		{A39E8BD7-C609-4F64-887D-DA99A6976D59} = {F3847317-29DC-4F4E-AC0F-534CEA3E3970}
 	EndGlobalSection
 EndGlobal

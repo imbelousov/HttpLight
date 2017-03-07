@@ -76,7 +76,7 @@ namespace HttpLight
 
         private void ApplyAttributes(Action action)
         {
-            var actionAttributes = action.Invoker.MethodInfo.GetCustomAttributes().Select(x => x as ActionAttribute).Where(x => x != null);
+            var actionAttributes = action.Invoker.MethodInfo.GetCustomAttributes(true).Select(x => x as ActionAttribute).Where(x => x != null);
             foreach (var actionAttribute in actionAttributes)
             {
                 actionAttribute.Apply(action);

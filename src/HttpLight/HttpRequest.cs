@@ -93,7 +93,14 @@ namespace HttpLight
 
         public bool IsWebSocketRequest
         {
-            get { return _innerRequest.IsWebSocketRequest; }
+            get
+            {
+#if FEATURE_WEBSOCKET
+                return _innerRequest.IsWebSocketRequest;
+#else
+                return false;
+#endif
+            }
         }
 
         public bool KeepAlive

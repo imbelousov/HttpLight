@@ -81,10 +81,12 @@ namespace HttpLight.Test.Utils
             throw new NotImplementedException();
         }
 
+#if FEATURE_ASYNC
         public Task<X509Certificate2> GetClientCertificateAsync()
         {
             throw new NotImplementedException();
         }
+#endif
     }
 
     internal class FakeHttpRequestContent : IHttpRequestContent

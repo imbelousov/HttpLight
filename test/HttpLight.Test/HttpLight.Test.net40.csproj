@@ -36,7 +36,13 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="nunit.framework, Version=3.6.1.0, Culture=neutral, PublicKeyToken=2638cd05610744eb, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\NUnit.3.6.1\lib\net40\nunit.framework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Web" />
   </ItemGroup>
   <Choose>
     <When Condition="('$(VisualStudioVersion)' == '10.0' or '$(VisualStudioVersion)' == '') and '$(TargetFrameworkVersion)' == 'v3.5'">
@@ -51,14 +57,30 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="MethodInvokerTest.cs" />
+    <Compile Include="UnitTests\PrimitivesBinderTest.cs" />
+    <Compile Include="UnitTests\ControllerCollectionTest.cs" />
+    <Compile Include="UnitTests\RequestStateMachineTest.cs" />
+    <Compile Include="UnitTests\ActionCollectionTest.cs" />
+    <Compile Include="Utils\ActionBuilder.cs" />
+    <Compile Include="Utils\FakeHttpRequest.cs" />
+    <Compile Include="UnitTests\FiniteStateMachineTest.cs" />
+    <Compile Include="UnitTests\HttpMethodHelperTest.cs" />
+    <Compile Include="UnitTests\InstanceCollectionTest.cs" />
+    <Compile Include="UnitTests\MethodInvokerTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UnitTests\SafeStringConvertTest.cs" />
+    <Compile Include="UnitTests\StreamHelperTest.cs" />
+    <Compile Include="Utils\FakeHttpResponse.cs" />
+    <Compile Include="Utils\FakeRequestStateMachineContext.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\HttpLight\HttpLight.net40.csproj">
       <Project>{e82d194f-dc15-4b1c-94ca-11203bcb1232}</Project>
       <Name>HttpLight.net40</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
@@ -80,11 +102,4 @@
   </Choose>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

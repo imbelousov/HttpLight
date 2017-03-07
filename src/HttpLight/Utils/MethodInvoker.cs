@@ -95,7 +95,7 @@ namespace HttpLight.Utils
                 {
                     Type = x.ParameterType,
                     Name = x.Name,
-                    Attributes = x.GetCustomAttributes().ToArray()
+                    Attributes = x.GetCustomAttributes(true).Cast<Attribute>().ToArray()
                 })
                 .ToArray();
         }

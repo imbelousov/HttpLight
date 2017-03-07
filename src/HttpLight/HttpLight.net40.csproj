@@ -33,18 +33,57 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Runtime.Caching" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Action.cs" />
+    <Compile Include="ActionCollection.cs" />
+    <Compile Include="Attributes\ActionAttribute.cs" />
+    <Compile Include="Attributes\BeforeAttribute.cs" />
+    <Compile Include="Attributes\BinderAttribute.cs" />
+    <Compile Include="Attributes\StatusCodeAttribute.cs" />
+    <Compile Include="Attributes\PathAttribute.cs" />
+    <Compile Include="Attributes\PostAttribute.cs" />
+    <Compile Include="Attributes\GetAttribute.cs" />
+    <Compile Include="ActionParameterBinderFactory.cs" />
+    <Compile Include="Controller.cs" />
+    <Compile Include="ControllerCollection.cs" />
+    <Compile Include="DefaultController.cs" />
+    <Compile Include="HostCollection.cs" />
+    <Compile Include="HttpContentType.cs" />
     <Compile Include="HttpMethod.cs" />
-    <Compile Include="HttpModule.cs" />
+    <Compile Include="HttpRequest.cs" />
+    <Compile Include="HttpResponse.cs" />
+    <Compile Include="HttpServer.cs" />
+    <Compile Include="HttpStatusCode.cs" />
+    <Compile Include="IActionParameterBinder.cs" />
+    <Compile Include="IHttpRequest.cs" />
+    <Compile Include="IHttpResponse.cs" />
+    <Compile Include="PrimitivesBinder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RequestStateMachine.cs" />
+    <Compile Include="Utils\FiniteStateMachine.cs" />
+    <Compile Include="Utils\HttpMethodHelper.cs" />
+    <Compile Include="Utils\InstanceCollection.cs" />
     <Compile Include="Utils\MethodInvoker.cs" />
+    <Compile Include="Utils\SafeStringConvert.cs" />
+    <Compile Include="Utils\StreamHelper.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Views\404.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Views\405.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Views\500.html" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

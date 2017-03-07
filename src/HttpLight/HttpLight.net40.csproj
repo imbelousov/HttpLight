@@ -48,6 +48,9 @@
     <Compile Include="Attributes\ActionAttribute.cs" />
     <Compile Include="Attributes\BeforeAttribute.cs" />
     <Compile Include="Attributes\BinderAttribute.cs" />
+    <Compile Include="Attributes\DeleteAttribute.cs" />
+    <Compile Include="Attributes\HeadAttribute.cs" />
+    <Compile Include="Attributes\PutAttribute.cs" />
     <Compile Include="Attributes\StatusCodeAttribute.cs" />
     <Compile Include="Attributes\PathAttribute.cs" />
     <Compile Include="Attributes\PostAttribute.cs" />

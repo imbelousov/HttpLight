@@ -4,6 +4,9 @@
     {
         Unknown,
         Get,
-        Post
+        Head,
+        Post,
+        Put,
+        Delete
     }
 }

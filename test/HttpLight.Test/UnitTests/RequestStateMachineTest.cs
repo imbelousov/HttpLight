@@ -1,13 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using System.Text;
-#if FEATURE_ASYNC
-using System.Threading.Tasks;
-#endif
-using HttpLight.Attributes;
 using HttpLight.Test.Utils;
-using HttpLight.Utils;
 using NUnit.Framework;
 
 namespace HttpLight.Test.UnitTests
@@ -15,395 +10,343 @@ namespace HttpLight.Test.UnitTests
     [TestFixture]
     public class RequestStateMachineTest
     {
-        private const string BaseUrl = "http://localhost:8080";
-        private const string GetUrl = BaseUrl + "/Get";
-        private const string NotExistUrl = BaseUrl + "/NotExist";
-        private const string ErrorGetUrl = BaseUrl + "/ErrorGet";
-#if FEATURE_ASYNC
-        private const string GetAsyncUrl = BaseUrl + "/GetAsync";
-        private const string ErrorGetAsyncUrl = BaseUrl + "/ErrorGetAsync";
-#endif
+        private static IEnumerable<TestCaseData> SelectUsualActionData
+        {
+            get
+            {
+                yield return new TestCaseData("/test", HttpMethod.Get, "/test", HttpMethod.Get)
+                {
+                    ExpectedResult = new Tuple<RequestState, HttpStatusCode>(RequestState.InvokeBeforeActions, default(HttpStatusCode)),
+                    TestName = "Ok"
+                };
+                yield return new TestCaseData("/test", HttpMethod.Get, "/qwerty", HttpMethod.Get)
+                {
+                    ExpectedResult = new Tuple<RequestState, HttpStatusCode>(RequestState.InvokeBeforeActions, HttpStatusCode.NotFound),
+                    TestName = "NotFound"
+                };
+                yield return new TestCaseData("/test", HttpMethod.Get, "/test", HttpMethod.Post)
+                {
+                    ExpectedResult = new Tuple<RequestState, HttpStatusCode>(RequestState.InvokeBeforeActions, HttpStatusCode.MethodNotAllowed),
+                    TestName = "MethodNotAllowed"
+                };
+            }
+        }
+
+        private static IEnumerable<TestCaseData> InvokeBeforeActionsData
+        {
+            get
+            {
+                yield return new TestCaseData(new string[0], new bool[0])
+                {
+                    ExpectedResult = new Tuple<RequestState, HttpStatusCode, string>(RequestState.InvokeUsualAction, default(HttpStatusCode), string.Empty),
+                    TestName = "No actions"
+                };
+                yield return new TestCaseData(new string[] {null}, new[] {false})
+                {
+                    ExpectedResult = new Tuple<RequestState, HttpStatusCode, string>(RequestState.InvokeUsualAction, default(HttpStatusCode), string.Empty),
+                    TestName = "Return void"
+                };
+                yield return new TestCaseData(new[] {string.Empty}, new[] {false})
+                {
+                    ExpectedResult = new Tuple<RequestState, HttpStatusCode, string>(RequestState.SendResponse, default(HttpStatusCode), string.Empty),
+                    TestName = "Return empty string"
+                };
+                yield return new TestCaseData(new[] {"1"}, new[] {false})
+                {
+                    ExpectedResult = new Tuple<RequestState, HttpStatusCode, string>(RequestState.SendResponse, default(HttpStatusCode), "1"),
+                    TestName = "Return string"
+                };
+                yield return new TestCaseData(new[] {"1", null}, new[] {false, false})
+                {
+                    ExpectedResult = new Tuple<RequestState, HttpStatusCode, string>(RequestState.SendResponse, default(HttpStatusCode), "1"),
+                    TestName = "Returns first action"
+                };
+                yield return new TestCaseData(new[] {null, "2"}, new[] {false, false})
+                {
+                    ExpectedResult = new Tuple<RequestState, HttpStatusCode, string>(RequestState.SendResponse, default(HttpStatusCode), "2"),
+                    TestName = "Returns second action"
+                };
+                yield return new TestCaseData(new[] {"1", "2"}, new[] {false, false})
+                {
+                    ExpectedResult = new Tuple<RequestState, HttpStatusCode, string>(RequestState.SendResponse, default(HttpStatusCode), "1"),
+                    TestName = "Return both actions"
+                };
+                yield return new TestCaseData(new string[] {null}, new[] {true})
+                {
+                    ExpectedResult = new Tuple<RequestState, HttpStatusCode, string>(RequestState.SelectStatusCodeAction, HttpStatusCode.InternalServerError, string.Empty),
+                    TestName = "Throw"
+                };
+                yield return new TestCaseData(new[] {"1", "2"}, new[] {true, false})
+                {
+                    ExpectedResult = new Tuple<RequestState, HttpStatusCode, string>(RequestState.SelectStatusCodeAction, HttpStatusCode.InternalServerError, string.Empty),
+                    TestName = "Throws first action"
+                };
+                yield return new TestCaseData(new[] {"1", "2"}, new[] {false, true})
+                {
+                    ExpectedResult = new Tuple<RequestState, HttpStatusCode, string>(RequestState.SendResponse, default(HttpStatusCode), "1"),
+                    TestName = "Throws second action, first returns"
+                };
+                yield return new TestCaseData(new[] {null, "2"}, new[] {false, true})
+                {
+                    ExpectedResult = new Tuple<RequestState, HttpStatusCode, string>(RequestState.SelectStatusCodeAction, HttpStatusCode.InternalServerError, string.Empty),
+                    TestName = "Throws second action, first doesn't return"
+                };
+            }
+        }
+
+        private static IEnumerable<TestCaseData> InvokeUsualActionData
+        {
+            get
+            {
+                yield return new TestCaseData(null, false)
+                {
+                    ExpectedResult = new Tuple<RequestState, HttpStatusCode, string>(RequestState.SendResponse, default(HttpStatusCode), string.Empty),
+                    TestName = "Return void"
+                };
+                yield return new TestCaseData("test", false)
+                {
+                    ExpectedResult = new Tuple<RequestState, HttpStatusCode, string>(RequestState.SendResponse, default(HttpStatusCode), "test"),
+                    TestName = "Return string"
+                };
+                yield return new TestCaseData(null, true)
+                {
+                    ExpectedResult = new Tuple<RequestState, HttpStatusCode, string>(RequestState.SelectStatusCodeAction, HttpStatusCode.InternalServerError, string.Empty),
+                    TestName = "Throw"
+                };
+            }
+        }
+
+        private static IEnumerable<TestCaseData> InvokeStatusCodeActionData
+        {
+            get
+            {
+                yield return new TestCaseData("test", false)
+                {
+                    ExpectedResult = new Tuple<RequestState, HttpStatusCode, string>(RequestState.SendResponse, default(HttpStatusCode), "test"),
+                    TestName = "Ok"
+                };
+                yield return new TestCaseData("test", true)
+                {
+                    ExpectedResult = new Tuple<RequestState, HttpStatusCode, string>(RequestState.SendResponse, HttpStatusCode.InternalServerError, string.Empty),
+                    TestName = "InternalServerError"
+                };
+            }
+        }
+
+        private static IEnumerable<TestCaseData> SendResponseData
+        {
+            get
+            {
+                yield return new TestCaseData("test", false, false)
+                {
+                    ExpectedResult = new Tuple<RequestState, string>(RequestState.End, "test"),
+                    TestName = "Ok"
+                };
+                yield return new TestCaseData("test", true, false)
+                {
+                    ExpectedResult = new Tuple<RequestState, string>(RequestState.End, string.Empty),
+                    TestName = "One exception"
+                };
+                yield return new TestCaseData("test", false, true)
+                {
+                    ExpectedResult = new Tuple<RequestState, string>(RequestState.End, string.Empty),
+                    TestName = "Two exceptions"
+                };
+            }
+        }
 
         [Test]
         public void Begin()
         {
             var stateMachine = new RequestStateMachine();
-            var context = CreateContext();
-            var state = stateMachine.Begin(context);
-            Assert.AreEqual(RequestState.SelectUsualAction, state);
+            var context = new FakeRequestStateMachineContext();
+            var result = stateMachine.Begin(context);
+            Assert.AreEqual(RequestState.SelectUsualAction, result);
         }
 
-        [Test]
-        public void SelectAction_Exist()
+        [TestCaseSource(nameof(SelectUsualActionData))]
+        public object SelectUsualAction(string actionPath, HttpMethod actionMethod, string requestPath, HttpMethod requestMethod)
         {
             var stateMachine = new RequestStateMachine();
-            InitActions(stateMachine);
-            var context = CreateContext(GetUrl);
+            var context = new FakeRequestStateMachineContext(requestPath, requestMethod);
+            var action = new ActionBuilder("Test").Build();
+            stateMachine.Actions.Add(actionMethod, actionPath, action);
             var state = stateMachine.SelectUsualAction(context);
-            Assert.AreEqual(RequestState.InvokeUsualAction, state);
+            return new Tuple<RequestState, HttpStatusCode>(state, context.Response.StatusCode);
         }
 
-        [Test]
-        public void SelectAction_NotExist()
+        [TestCaseSource(nameof(InvokeBeforeActionsData))]
+        public object InvokeBeforeActions(string[] returnValues, bool[] throws)
         {
             var stateMachine = new RequestStateMachine();
-            InitActions(stateMachine);
-            var context = CreateContext(NotExistUrl);
-            var state = stateMachine.SelectUsualAction(context);
-            Assert.AreEqual(RequestState.SelectStatusCodeAction, state);
-            Assert.AreEqual(HttpStatusCode.NotFound, context.HttpResponse.StatusCode);
-        }
-
-        [Test]
-        public void SelectAction_InvalidMethod()
-        {
-            var stateMachine = new RequestStateMachine();
-            InitActions(stateMachine);
-            var context = CreateContext(GetUrl, HttpMethod.Post);
-            var state = stateMachine.SelectUsualAction(context);
-            Assert.AreEqual(RequestState.SelectStatusCodeAction, state);
-            Assert.AreEqual(HttpStatusCode.MethodNotAllowed, context.HttpResponse.StatusCode);
-        }
-
-        [Test]
-        public void InvokeAction_Success()
-        {
-            var stateMachine = new RequestStateMachine();
-            InitActions(stateMachine);
-            bool methodNotAllowed;
-            var context = CreateContext(GetUrl);
-            context.Action = stateMachine.Actions.Get(HttpMethod.Get, context.HttpRequest.Url.LocalPath, out methodNotAllowed);
-            var state = stateMachine.InvokeUsualAction(context);
-            var result = StreamToString(context.Result);
-            Assert.AreEqual(RequestState.SendResponse, state);
-            Assert.AreEqual(HttpMethod.Get.ToString(), result);
-        }
-
-        [Test]
-        public void InvokeAction_Error()
-        {
-            var stateMachine = new RequestStateMachine();
-            InitActions(stateMachine);
-            bool methodNotAllowed;
-            var context = CreateContext(ErrorGetUrl);
-            context.Action = stateMachine.Actions.Get(HttpMethod.Get, context.HttpRequest.Url.LocalPath, out methodNotAllowed);
-            var state = stateMachine.InvokeUsualAction(context);
-            Assert.IsNull(context.Result);
-            Assert.AreEqual(RequestState.SelectStatusCodeAction, state);
-            Assert.AreEqual(HttpStatusCode.InternalServerError, context.HttpResponse.StatusCode);
+            for (var i = 0; i < returnValues.Length; i++)
+            {
+                var returnValue = returnValues[i];
+                var actionBuilder = new ActionBuilder("Test" + i);
+                if (returnValue != null)
+                    actionBuilder = actionBuilder.SetReturnType(typeof(string)).SetReturnValue(returnValue);
+                if (throws[i])
+                    actionBuilder = actionBuilder.Throws(typeof(Exception));
+                var action = actionBuilder.Build();
+                stateMachine.Actions.AddBefore(action);
+            }
+            var context = new FakeRequestStateMachineContext();
+            var state = stateMachine.InvokeBeforeActions(context);
+            return new Tuple<RequestState, HttpStatusCode, string>(state, context.Response.StatusCode, StreamToString(context.Result));
         }
 
 #if FEATURE_ASYNC
-        [TestCase(GetUrl, TestName = "Sync")]
-        [TestCase(GetAsyncUrl, TestName = "Async")]
-        public void InvokeActionAsync_Success(string url)
+        [TestCaseSource(nameof(InvokeBeforeActionsData))]
+        public object InvokeBeforeActionsAsync(string[] returnValues, bool[] throws)
         {
             var stateMachine = new RequestStateMachine();
-            InitActions(stateMachine);
-            bool methodNotAllowed;
-            var context = CreateContext(url);
-            context.Action = stateMachine.Actions.Get(HttpMethod.Get, context.HttpRequest.Url.LocalPath, out methodNotAllowed);
-            var state = stateMachine.InvokeUsualActionAsync(context).Result;
-            var result = StreamToString(context.Result);
-            Assert.AreEqual(RequestState.SendResponse, state);
-            Assert.AreEqual(HttpMethod.Get.ToString(), result);
-        }
-
-        [TestCase(ErrorGetUrl, TestName = "Sync")]
-        [TestCase(ErrorGetAsyncUrl, TestName = "Async")]
-        public void InvokeActionAsync_Error(string url)
-        {
-            var stateMachine = new RequestStateMachine();
-            InitActions(stateMachine);
-            bool methodNotAllowed;
-            var context = CreateContext(url);
-            context.Action = stateMachine.Actions.Get(HttpMethod.Get, context.HttpRequest.Url.LocalPath, out methodNotAllowed);
-            var state = stateMachine.InvokeUsualActionAsync(context).Result;
-            Assert.IsNull(context.Result);
-            Assert.AreEqual(RequestState.SelectStatusCodeAction, state);
-            Assert.AreEqual(HttpStatusCode.InternalServerError, context.HttpResponse.StatusCode);
+            for (var i = 0; i < returnValues.Length; i++)
+            {
+                var returnValue = returnValues[i];
+                var actionBuilder = new ActionBuilder("Test" + i);
+                if (returnValue != null)
+                    actionBuilder = actionBuilder.SetReturnType(typeof(string)).SetReturnValue(returnValue);
+                if (throws[i])
+                    actionBuilder = actionBuilder.Throws(typeof(Exception));
+                var action = actionBuilder.Build();
+                stateMachine.Actions.AddBefore(action);
+            }
+            var context = new FakeRequestStateMachineContext();
+            var state = stateMachine.InvokeBeforeActionsAsync(context).Result;
+            return new Tuple<RequestState, HttpStatusCode, string>(state, context.Response.StatusCode, StreamToString(context.Result));
         }
 #endif
 
-        [TestCase(HttpStatusCode.NotFound, ExpectedResult = RequestState.InvokeStatusCodeAction, TestName = "Exist")]
-        [TestCase(HttpStatusCode.InternalServerError, ExpectedResult = RequestState.SendResponse, TestName = "Not exist")]
-        public object SelectStatusCodeAction(object httpStatusCode)
+        [TestCaseSource(nameof(InvokeUsualActionData))]
+        public object InvokeUsualAction(string returnValue, bool throws)
         {
             var stateMachine = new RequestStateMachine();
-            InitActions(stateMachine);
-            var context = CreateContext();
-            context.HttpResponse.StatusCode = (HttpStatusCode) httpStatusCode;
+            var actionBuilder = new ActionBuilder("Test");
+            if (returnValue != null)
+                actionBuilder = actionBuilder.SetReturnType(typeof(string)).SetReturnValue(returnValue);
+            if (throws)
+                actionBuilder = actionBuilder.Throws(typeof(Exception));
+            var action = actionBuilder.Build();
+            var context = new FakeRequestStateMachineContext();
+            context.Action = action;
+            var state = stateMachine.InvokeUsualAction(context);
+            return new Tuple<RequestState, HttpStatusCode, string>(state, context.Response.StatusCode, StreamToString(context.Result));
+        }
+
+#if FEATURE_ASYNC
+        [TestCaseSource(nameof(InvokeUsualActionData))]
+        public object InvokeUsualActionAsync(string returnValue, bool throws)
+        {
+            var stateMachine = new RequestStateMachine();
+            var actionBuilder = new ActionBuilder("Test");
+            if (returnValue != null)
+                actionBuilder = actionBuilder.SetReturnType(typeof(string)).SetReturnValue(returnValue);
+            if (throws)
+                actionBuilder = actionBuilder.Throws(typeof(Exception));
+            var action = actionBuilder.Build();
+            var context = new FakeRequestStateMachineContext();
+            context.Action = action;
+            var state = stateMachine.InvokeUsualActionAsync(context).Result;
+            return new Tuple<RequestState, HttpStatusCode, string>(state, context.Response.StatusCode, StreamToString(context.Result));
+        }
+#endif
+
+        [TestCase(HttpStatusCode.NotFound, HttpStatusCode.NotFound, ExpectedResult = RequestState.InvokeStatusCodeAction, TestName = "Found")]
+        [TestCase(HttpStatusCode.NotFound, HttpStatusCode.InternalServerError, ExpectedResult = RequestState.SendResponse, TestName = "Not found")]
+        public object SelectStatusCodeAction(HttpStatusCode registeredStatusCode, HttpStatusCode setStatusCode)
+        {
+            var stateMachine = new RequestStateMachine();
+            var action = new ActionBuilder("Test").Build();
+            var context = new FakeRequestStateMachineContext();
+            stateMachine.Actions.Add(registeredStatusCode, action);
+            context.Response.StatusCode = setStatusCode;
             var state = stateMachine.SelectStatusCodeAction(context);
             return state;
         }
 
-        [Test]
-        public void InvokeStatusCodeAction_Success()
+        [TestCaseSource(nameof(InvokeStatusCodeActionData))]
+        public object InvokeStatusCodeAction(string returnValue, bool throws)
         {
             var stateMachine = new RequestStateMachine();
-            InitActions(stateMachine);
-            var context = CreateContext();
-            context.Action = stateMachine.Actions.Get(HttpStatusCode.NotFound);
+            var actionBuilder = new ActionBuilder("Test");
+            if (returnValue != null)
+                actionBuilder = actionBuilder.SetReturnType(typeof(string)).SetReturnValue(returnValue);
+            if (throws)
+                actionBuilder = actionBuilder.Throws(typeof(Exception));
+            var action = actionBuilder.Build();
+            var context = new FakeRequestStateMachineContext();
+            context.Action = action;
             var state = stateMachine.InvokeStatusCodeAction(context);
-            var result = StreamToString(context.Result);
-            Assert.AreEqual(RequestState.SendResponse, state);
-            Assert.AreEqual(HttpStatusCode.NotFound.ToString(), result);
-        }
-
-        [Test]
-        public void InvokeStatusCodeAction_Error()
-        {
-            var stateMachine = new RequestStateMachine();
-            InitActions(stateMachine);
-            var context = CreateContext();
-            context.Action = stateMachine.Actions.Get(HttpStatusCode.MethodNotAllowed);
-            var state = stateMachine.InvokeStatusCodeAction(context);
-            Assert.IsNull(context.Result);
-            Assert.AreEqual(RequestState.SendResponse, state);
+            return new Tuple<RequestState, HttpStatusCode, string>(state, context.Response.StatusCode, StreamToString(context.Result));
         }
 
 #if FEATURE_ASYNC
-        [TestCase(HttpStatusCode.NotFound, ExpectedResult = nameof(HttpStatusCode.NotFound), TestName = "Sync")]
-        [TestCase(HttpStatusCode.BadRequest, ExpectedResult = nameof(HttpStatusCode.BadRequest), TestName = "Async")]
-        public string InvokeStatusCodeActionAsync_Success(object httpStatusCode)
+        [TestCaseSource(nameof(InvokeStatusCodeActionData))]
+        public object InvokeStatusCodeActionAsync(string returnValue, bool throws)
         {
             var stateMachine = new RequestStateMachine();
-            InitActions(stateMachine);
-            var context = CreateContext();
-            context.Action = stateMachine.Actions.Get((HttpStatusCode) httpStatusCode);
+            var actionBuilder = new ActionBuilder("Test");
+            if (returnValue != null)
+                actionBuilder = actionBuilder.SetReturnType(typeof(string)).SetReturnValue(returnValue);
+            if (throws)
+                actionBuilder = actionBuilder.Throws(typeof(Exception));
+            var action = actionBuilder.Build();
+            var context = new FakeRequestStateMachineContext();
+            context.Action = action;
             var state = stateMachine.InvokeStatusCodeActionAsync(context).Result;
-            var result = StreamToString(context.Result);
-            Assert.AreEqual(RequestState.SendResponse, state);
-            return result;
-        }
-
-        [TestCase(HttpStatusCode.MethodNotAllowed, TestName = "Sync")]
-        [TestCase(HttpStatusCode.Unauthorized, TestName = "Async")]
-        public void InvokeStatusCodeActionAsync_Error(object httpStatusCode)
-        {
-            var stateMachine = new RequestStateMachine();
-            InitActions(stateMachine);
-            var context = CreateContext();
-            context.Action = stateMachine.Actions.Get((HttpStatusCode) httpStatusCode);
-            var state = stateMachine.InvokeStatusCodeActionAsync(context).Result;
-            Assert.IsNull(context.Result);
-            Assert.AreEqual(RequestState.SendResponse, state);
+            return new Tuple<RequestState, HttpStatusCode, string>(state, context.Response.StatusCode, StreamToString(context.Result));
         }
 #endif
 
-        [Test]
-        public void SendResponse_Success()
+        [TestCaseSource(nameof(SendResponseData))]
+        public object SendResponse(string result, bool dispose, bool nullOutputStream)
         {
             var stateMachine = new RequestStateMachine();
-            var outputStream = new MemoryStream();
-            var resultStream = new MemoryStream(new byte[] {1, 2, 3, 4});
-            var context = CreateContext(outputStream: outputStream);
-            context.Result = resultStream;
+            var context = new FakeRequestStateMachineContext();
+            context.Result = StringToStream(result);
+            if (dispose)
+                context.OutputStream.Dispose();
+            if (nullOutputStream)
+                context.SetOutputStream(null);
             var state = stateMachine.SendResponse(context);
-            Assert.AreEqual(RequestState.End, state);
-            CollectionAssert.AreEqual(resultStream.ToArray(), outputStream.ToArray());
-        }
-
-        [TestCase(false, TestName = "Disposed")]
-        [TestCase(true, TestName = "Null")]
-        public void SendResponse_Error(bool errorOnDispose)
-        {
-            var stateMachine = new RequestStateMachine();
-            var outputStream = !errorOnDispose ? new MemoryStream() : null;
-            if (!errorOnDispose)
-                outputStream.Dispose();
-            var resultStream = new MemoryStream(new byte[] {1, 2, 3, 4});
-            var context = CreateContext(outputStream: outputStream);
-            context.Result = resultStream;
-            var state = stateMachine.SendResponse(context);
-            Assert.AreEqual(RequestState.End, state);
-            if (!errorOnDispose)
-                CollectionAssert.AreEqual(new byte[0], outputStream.ToArray());
+            var output = StreamToString(new MemoryStream(((MemoryStream) context.OutputStream ?? new MemoryStream()).ToArray()));
+            return new Tuple<RequestState, string>(state, output);
         }
 
 #if FEATURE_ASYNC
-        [Test]
-        public void SendResponseAsync_Success()
+        [TestCaseSource(nameof(SendResponseData))]
+        public object SendResponseAsync(string result, bool dispose, bool nullOutputStream)
         {
             var stateMachine = new RequestStateMachine();
-            var outputStream = new MemoryStream();
-            var resultStream = new MemoryStream(new byte[] {1, 2, 3, 4});
-            var context = CreateContext(outputStream: outputStream);
-            context.Result = resultStream;
+            var context = new FakeRequestStateMachineContext();
+            context.Result = StringToStream(result);
+            if (dispose)
+                context.OutputStream.Dispose();
+            if (nullOutputStream)
+                context.SetOutputStream(null);
             var state = stateMachine.SendResponseAsync(context).Result;
-            Assert.AreEqual(RequestState.End, state);
-            CollectionAssert.AreEqual(resultStream.ToArray(), outputStream.ToArray());
-        }
-
-        [TestCase(false, TestName = "Disposed")]
-        [TestCase(true, TestName = "Null")]
-        public void SendResponseAsync_Error(bool errorOnDispose)
-        {
-            var stateMachine = new RequestStateMachine();
-            var outputStream = !errorOnDispose ? new MemoryStream() : null;
-            if (!errorOnDispose)
-                outputStream.Dispose();
-            var resultStream = new MemoryStream(new byte[] {1, 2, 3, 4});
-            var context = CreateContext(outputStream: outputStream);
-            context.Result = resultStream;
-            var state = stateMachine.SendResponseAsync(context).Result;
-            Assert.AreEqual(RequestState.End, state);
-            if (!errorOnDispose)
-                CollectionAssert.AreEqual(new byte[0], outputStream.ToArray());
+            var output = StreamToString(new MemoryStream(((MemoryStream) context.OutputStream ?? new MemoryStream()).ToArray()));
+            return new Tuple<RequestState, string>(state, output);
         }
 #endif
 
-        [TestCase(GetUrl + "?a=5", 5, 0, null, 0, TestName = "Custom binder")]
-        [TestCase(GetUrl + "?b=5", 0, 5, null, 0, TestName = "Primitives binder")]
-        [TestCase(GetUrl + "?c=5", 0, 0, null, 0, TestName = "Default value (reference type)")]
-        [TestCase(GetUrl + "?d=5", 0, 0, null, 0, TestName = "Default value (value type)")]
-        [TestCase(GetUrl, 0, 0, null, 0, TestName = "Default value (all parameters)")]
-        public void BindParameters(string url, int? expectedA, int expectedB, int? expectedC, int expectedD)
-        {
-            var stateMachine = new RequestStateMachine();
-            InitActions(stateMachine);
-            var bindParameters = stateMachine.GetType().GetMethod("BindParameters", BindingFlags.Instance | BindingFlags.NonPublic);
-            var context = CreateContext(url);
-            bool methodNotAllowed;
-            context.Action = stateMachine.Actions.Get(HttpMethod.Get, new Uri(url).LocalPath, out methodNotAllowed);
-            var parameters = (object[]) bindParameters.Invoke(stateMachine, new object[] {context.HttpRequest, context.Action.Invoker.Parameters});
-            var a = parameters[0] as CustomModel;
-            var b = (int) parameters[1];
-            var c = parameters[2] as CustomModel;
-            var d = (CustomValueType) parameters[3];
-            Assert.AreEqual(expectedA, a != null ? (int?) a.Value : null);
-            Assert.AreEqual(expectedB, b);
-            Assert.AreEqual(expectedC, c != null ? (int?) c.Value : null);
-            Assert.AreEqual(expectedD, d.Value);
-        }
-
-        [TestCase(GetUrl, HttpMethod.Get, ExpectedResult = nameof(HttpMethod.Get), TestName = "Success")]
-        [TestCase(GetUrl, HttpMethod.Post, ExpectedResult = "", TestName = "Method not allowed")]
-        [TestCase(NotExistUrl, HttpMethod.Get, ExpectedResult = nameof(HttpStatusCode.NotFound), TestName = "Not found")]
-        [TestCase(ErrorGetUrl, HttpMethod.Get, ExpectedResult = "", TestName = "Error")]
-        public string Complex(string url, object method)
-        {
-            var stateMachine = new RequestStateMachine();
-            InitActions(stateMachine);
-            var outputStream = new SavingDataMemoryStream();
-            var context = CreateContext(url, (HttpMethod) method, outputStream);
-            stateMachine.Start(context);
-            var result = StreamToString(outputStream.DataBeforeDispose);
-            return result;
-        }
-
-        private RequestStateMachineContext CreateContext(string url = null, HttpMethod method = HttpMethod.Get, Stream outputStream = null)
-        {
-            var request = string.IsNullOrEmpty(url)
-                ? new FakeHttpRequest()
-                : new FakeHttpRequest(url);
-            request.Method = method;
-            var response = new FakeHttpResponse();
-            if (outputStream != null)
-                response.OutputStream = outputStream;
-            return new RequestStateMachineContext(request, response, response.OutputStream);
-        }
-
-        private void InitActions(RequestStateMachine stateMachine)
-        {
-            var controllers = new ControllerCollection(stateMachine.Actions);
-            controllers.Add<RequestStateMachineTestController>();
-        }
-
-        private string StreamToString(Stream stream)
+        private static string StreamToString(Stream stream)
         {
             using (var ms = new MemoryStream())
             {
+                stream = stream ?? new MemoryStream();
                 stream.CopyTo(ms);
                 return Encoding.UTF8.GetString(ms.ToArray());
             }
         }
-    }
 
-    internal class RequestStateMachineTestController : Controller
-    {
-        [Get]
-        [Path("/Get")]
-        public string GetTestAction([Binder(typeof(CustomBinder))] CustomModel a, int b, CustomModel c, CustomValueType d)
+        private static Stream StringToStream(string s)
         {
-            return HttpMethod.Get.ToString();
-        }
-
-        [Get]
-        [Path("/ErrorGet")]
-        public string ErrorTestAction()
-        {
-            throw new Exception();
-        }
-
-        [StatusCode(HttpStatusCode.NotFound)]
-        public string NotFoundTestAction()
-        {
-            return HttpStatusCode.NotFound.ToString();
-        }
-
-        [StatusCode(HttpStatusCode.MethodNotAllowed)]
-        public string MethodNotAllowedTestAction()
-        {
-            throw new Exception();
-        }
-
-#if FEATURE_ASYNC
-        [Get]
-        [Path("/GetAsync")]
-        public Task<string> GetTestActionAsync([Binder(typeof(CustomBinder))] CustomModel a, int b, CustomModel c, CustomValueType d)
-        {
-            return Task.FromResult(HttpMethod.Get.ToString());
-        }
-
-        [Get]
-        [Path("/ErrorGetAsync")]
-        public Task<string> ErrorTestActionAsync()
-        {
-            throw new Exception();
-        }
-
-        [StatusCode(HttpStatusCode.BadRequest)]
-        public Task<string> NotFoundTestActionAsync()
-        {
-            return Task.FromResult(HttpStatusCode.BadRequest.ToString());
-        }
-
-        [StatusCode(HttpStatusCode.Unauthorized)]
-        public Task<string> MethodNotAllowedTestActionAsync()
-        {
-            throw new Exception();
-        }
-#endif
-    }
-
-    internal class CustomBinder : IActionParameterBinder
-    {
-        public object Bind(ActionParameterBinderContext actionParameterBinderContext)
-        {
-            var value = (int) SafeStringConvert.ChangeType(actionParameterBinderContext.HttpRequest.UrlParameters.Get(actionParameterBinderContext.ParameterName), typeof(int));
-            return new CustomModel {Value = value};
-        }
-    }
-
-    internal class CustomModel
-    {
-        public int Value { get; set; }
-    }
-
-    internal struct CustomValueType
-    {
-        public int Value { get; set; }
-    }
-
-    internal class SavingDataMemoryStream : MemoryStream
-    {
-        public Stream DataBeforeDispose { get; private set; }
-
-        protected override void Dispose(bool disposing)
-        {
-            DataBeforeDispose = new MemoryStream(ToArray());
-            base.Dispose(disposing);
+            if (s == null)
+                return null;
+            var buf = Encoding.UTF8.GetBytes(s);
+            var ms = new MemoryStream(buf);
+            return ms;
         }
     }
 }

@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using HttpLight.Utils;
+using NUnit.Framework;
+
 #if FEATURE_ASYNC
 using System.Threading.Tasks;
 #endif
-using HttpLight.Utils;
-using NUnit.Framework;
 
 namespace HttpLight.Test.UnitTests
 {

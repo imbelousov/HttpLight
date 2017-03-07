@@ -23,6 +23,7 @@ namespace HttpLight.Test.Utils
         public FakeHttpResponse()
         {
             ContentEncoding = Encoding.UTF8;
+            OutputStream = new MemoryStream();
         }
     }
 }

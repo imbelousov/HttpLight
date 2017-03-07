@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using HttpLight.Utils;
+
 #if FEATURE_ASYNC
 using System.Threading.Tasks;
 #endif
-using HttpLight.Utils;
 
 namespace HttpLight
 {
@@ -34,11 +35,13 @@ namespace HttpLight
             _binderFactory = new ActionParameterBinderFactory();
             AddState(RequestState.Begin, Begin);
             AddState(RequestState.SelectUsualAction, SelectUsualAction);
+            AddState(RequestState.InvokeBeforeActions, InvokeBeforeActions);
             AddState(RequestState.InvokeUsualAction, InvokeUsualAction);
             AddState(RequestState.SelectStatusCodeAction, SelectStatusCodeAction);
             AddState(RequestState.InvokeStatusCodeAction, InvokeStatusCodeAction);
             AddState(RequestState.SendResponse, SendResponse);
 #if FEATURE_ASYNC
+            AddAsyncState(RequestState.InvokeBeforeActions, InvokeBeforeActionsAsync);
             AddAsyncState(RequestState.InvokeUsualAction, InvokeUsualActionAsync);
             AddAsyncState(RequestState.InvokeStatusCodeAction, InvokeStatusCodeActionAsync);
             AddAsyncState(RequestState.SendResponse, SendResponseAsync);
@@ -50,6 +53,7 @@ namespace HttpLight
         /// </summary>
         internal RequestState Begin(RequestStateMachineContext context)
         {
+            context.Response.StatusCode = HttpStatusCode.Ok;
             return RequestState.SelectUsualAction;
         }
 
@@ -59,35 +63,114 @@ namespace HttpLight
         internal RequestState SelectUsualAction(RequestStateMachineContext context)
         {
             bool methodNotAllowed;
-            var action = _actions.Get(context.HttpRequest.Method, context.HttpRequest.Url.LocalPath, out methodNotAllowed);
+            var action = _actions.Get(context.Request.Method, context.Request.Url.LocalPath, out methodNotAllowed);
             if (action == null)
             {
-                context.HttpResponse.StatusCode = methodNotAllowed
+                context.Response.StatusCode = methodNotAllowed
                     ? HttpStatusCode.MethodNotAllowed
                     : HttpStatusCode.NotFound;
-                return RequestState.SelectStatusCodeAction;
             }
             context.Action = action;
+            return RequestState.InvokeBeforeActions;
+        }
+
+        /// <summary>
+        /// Attempt to invoke actions marked with <see cref="Attributes.BeforeAttribute"/>
+        /// </summary>
+        internal RequestState InvokeBeforeActions(RequestStateMachineContext context)
+        {
+            try
+            {
+                var beforeActions = _actions.GetBefore();
+                foreach (var beforeAction in beforeActions)
+                {
+                    var result = InvokeAction(beforeAction, context);
+                    if (result != null)
+                    {
+                        context.Result = StreamHelper.ObjectToStream(result, context.Response.ContentEncoding, beforeAction.Invoker.ReturnType);
+                        return RequestState.SendResponse;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                context.Response.Exception = e;
+                context.Response.StatusCode = HttpStatusCode.InternalServerError;
+                context.Result = null;
+                return RequestState.SelectStatusCodeAction;
+            }
             return RequestState.InvokeUsualAction;
         }
+
+#if FEATURE_ASYNC
+        /// <summary>
+        /// Attempt to invoke actions marked with <see cref="Attributes.BeforeAttribute"/>
+        /// </summary>
+        internal async Task<RequestState> InvokeBeforeActionsAsync(RequestStateMachineContext context)
+        {
+            try
+            {
+                var beforeActions = _actions.GetBefore();
+                foreach (var beforeAction in beforeActions)
+                {
+                    var result = await InvokeActionAsync(beforeAction, context);
+                    if (result != null)
+                    {
+                        context.Result = StreamHelper.ObjectToStream(result, context.Response.ContentEncoding, beforeAction.Invoker.ReturnType);
+                        return RequestState.SendResponse;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                context.Response.Exception = e;
+                context.Response.StatusCode = HttpStatusCode.InternalServerError;
+                context.Result = null;
+                return RequestState.SelectStatusCodeAction;
+            }
+            return RequestState.InvokeUsualAction;
+        }
+#endif
 
         /// <summary>
         /// Attempt to invoke selected action
         /// </summary>
         internal RequestState InvokeUsualAction(RequestStateMachineContext context)
         {
-            context.HttpResponse.StatusCode = HttpStatusCode.Ok;
-            return InvokeAction(context, RequestState.SelectStatusCodeAction);
+            try
+            {
+                var result = InvokeAction(context.Action, context);
+                context.Result = StreamHelper.ObjectToStream(result, context.Response.ContentEncoding, context.Action.Invoker.ReturnType);
+                return RequestState.SendResponse;
+            }
+            catch (Exception e)
+            {
+                context.Response.Exception = e;
+                context.Response.StatusCode = HttpStatusCode.InternalServerError;
+                context.Result = null;
+                return RequestState.SelectStatusCodeAction;
+            }
         }
 
 #if FEATURE_ASYNC
         /// <summary>
         /// Attempt to invoke selected action
         /// </summary>
-        internal Task<RequestState> InvokeUsualActionAsync(RequestStateMachineContext context)
+        internal async Task<RequestState> InvokeUsualActionAsync(RequestStateMachineContext context)
         {
-            context.HttpResponse.StatusCode = HttpStatusCode.Ok;
-            return InvokeActionAsync(context, RequestState.SelectStatusCodeAction);
+            try
+            {
+                var result = await InvokeActionAsync(context.Action, context);
+                context.Result = StreamHelper.ObjectToStream(result, context.Response.ContentEncoding, context.Action.Invoker.ReturnType);
+                return RequestState.SendResponse;
+            }
+            catch (Exception e)
+            {
+                context.Response.Exception = e;
+                context.Response.StatusCode = HttpStatusCode.InternalServerError;
+                context.Result = null;
+                return RequestState.SelectStatusCodeAction;
+            }
         }
 #endif
 
@@ -96,7 +179,7 @@ namespace HttpLight
         /// </summary>
         internal RequestState SelectStatusCodeAction(RequestStateMachineContext context)
         {
-            var action = _actions.Get(context.HttpResponse.StatusCode);
+            var action = _actions.Get(context.Response.StatusCode);
             if (action == null)
                 return RequestState.SendResponse;
             context.Action = action;
@@ -108,16 +191,38 @@ namespace HttpLight
         /// </summary>
         internal RequestState InvokeStatusCodeAction(RequestStateMachineContext context)
         {
-            return InvokeAction(context, RequestState.SendResponse);
+            try
+            {
+                var result = InvokeAction(context.Action, context);
+                context.Result = StreamHelper.ObjectToStream(result, context.Response.ContentEncoding, context.Action.Invoker.ReturnType);
+            }
+            catch (Exception e)
+            {
+                context.Response.Exception = e;
+                context.Response.StatusCode = HttpStatusCode.InternalServerError;
+                context.Result = null;
+            }
+            return RequestState.SendResponse;
         }
 
 #if FEATURE_ASYNC
         /// <summary>
         /// Attempt to invoke selected status code action
         /// </summary>
-        internal Task<RequestState> InvokeStatusCodeActionAsync(RequestStateMachineContext context)
+        internal async Task<RequestState> InvokeStatusCodeActionAsync(RequestStateMachineContext context)
         {
-            return InvokeActionAsync(context, RequestState.SendResponse);
+            try
+            {
+                var result = await InvokeActionAsync(context.Action, context);
+                context.Result = StreamHelper.ObjectToStream(result, context.Response.ContentEncoding, context.Action.Invoker.ReturnType);
+            }
+            catch (Exception e)
+            {
+                context.Response.Exception = e;
+                context.Response.StatusCode = HttpStatusCode.InternalServerError;
+                context.Result = null;
+            }
+            return RequestState.SendResponse;
         }
 #endif
 
@@ -185,7 +290,7 @@ namespace HttpLight
                 {
                     result[i] = binder.Bind(new ActionParameterBinderContext
                     {
-                        HttpRequest = request,
+                        Request = request,
                         ParameterName = parameter.Name,
                         ParameterType = parameter.Type,
                         ParameterAttributes = parameter.Attributes
@@ -197,50 +302,25 @@ namespace HttpLight
             return result;
         }
 
-        private RequestState InvokeAction(RequestStateMachineContext context, RequestState failState)
+        private object InvokeAction(Action action, RequestStateMachineContext context)
         {
-            var instance = (Controller) _controllers.GetObjectForThread(context.Action.Invoker.InstanceType);
-            instance.InternalRequest = context.HttpRequest;
-            instance.InternalResponse = context.HttpResponse;
-            var parameters = BindParameters(context.HttpRequest, context.Action.Invoker.Parameters);
-            try
-            {
-                var result = context.Action.Invoker.Invoke(instance, parameters);
-                var stream = StreamHelper.ObjectToStream(result, context.HttpResponse.ContentEncoding, context.Action.Invoker.ReturnType);
-                context.Result = stream;
-                return RequestState.SendResponse;
-            }
-            catch (Exception e)
-            {
-                context.HttpResponse.Exception = e;
-                context.HttpResponse.StatusCode = HttpStatusCode.InternalServerError;
-                return failState;
-            }
+            var instance = (Controller) _controllers.GetObjectForThread(action.Invoker.InstanceType);
+            instance.Initialize(context.Request, context.Response);
+            var parameters = BindParameters(context.Request, action.Invoker.Parameters);
+            var result = action.Invoker.Invoke(instance, parameters);
+            instance.Release();
+            return result;
         }
 
 #if FEATURE_ASYNC
-        private async Task<RequestState> InvokeActionAsync(RequestStateMachineContext context, RequestState failState)
+        private Task<object> InvokeActionAsync(Action action, RequestStateMachineContext context)
         {
-            var instance = (Controller) _controllers.GetObjectForThread(context.Action.Invoker.InstanceType);
-            instance.InternalRequest = context.HttpRequest;
-            instance.InternalResponse = context.HttpResponse;
-            var parameters = BindParameters(context.HttpRequest, context.Action.Invoker.Parameters);
-            context.HttpResponse.ContentEncoding = DefaultEncoding;
-            try
-            {
-                var result = context.Action.Invoker.IsAsync
-                    ? await context.Action.Invoker.InvokeAsync(instance, parameters)
-                    : context.Action.Invoker.Invoke(instance, parameters);
-                var stream = StreamHelper.ObjectToStream(result, context.HttpResponse.ContentEncoding, context.Action.Invoker.ReturnType);
-                context.Result = stream;
-                return RequestState.SendResponse;
-            }
-            catch (Exception e)
-            {
-                context.HttpResponse.Exception = e;
-                context.HttpResponse.StatusCode = HttpStatusCode.InternalServerError;
-                return failState;
-            }
+            var instance = (Controller) _controllers.GetObjectForThread(action.Invoker.InstanceType);
+            instance.Initialize(context.Request, context.Response);
+            var parameters = BindParameters(context.Request, action.Invoker.Parameters);
+            var result = action.Invoker.InvokeAsync(instance, parameters);
+            instance.Release();
+            return result;
         }
 #endif
     }
@@ -249,6 +329,7 @@ namespace HttpLight
     {
         Begin,
         SelectUsualAction,
+        InvokeBeforeActions,
         InvokeUsualAction,
         SelectStatusCodeAction,
         InvokeStatusCodeAction,
@@ -258,16 +339,20 @@ namespace HttpLight
 
     internal class RequestStateMachineContext
     {
-        public IHttpRequest HttpRequest { get; }
-        public IHttpResponse HttpResponse { get; }
-        public Stream OutputStream { get; }
+        public IHttpRequest Request { get; protected set; }
+        public IHttpResponse Response { get; protected set; }
+        public Stream OutputStream { get; protected set; }
         public Action Action { get; set; }
         public Stream Result { get; set; }
 
-        public RequestStateMachineContext(IHttpRequest httpRequest, IHttpResponse httpResponse, Stream outputStream)
+        protected RequestStateMachineContext()
         {
-            HttpRequest = httpRequest;
-            HttpResponse = httpResponse;
+        }
+
+        public RequestStateMachineContext(IHttpRequest request, IHttpResponse response, Stream outputStream)
+        {
+            Request = request;
+            Response = response;
             OutputStream = outputStream;
         }
     }

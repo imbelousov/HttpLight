@@ -15,12 +15,12 @@ namespace HttpLight.Test.UnitTests
             var binder = new PrimitivesBinder();
             var context = new ActionParameterBinderContext
             {
-                HttpRequest = new FakeHttpRequest(),
+                Request = new FakeHttpRequest(),
                 ParameterAttributes = new Attribute[0],
                 ParameterName = parameterName,
                 ParameterType = type
             };
-            context.HttpRequest.UrlParameters.Add(urlName, urlValue);
+            context.Request.UrlParameters.Add(urlName, urlValue);
             var result = binder.Bind(context);
             return result;
         }
@@ -32,13 +32,13 @@ namespace HttpLight.Test.UnitTests
             var binder = new PrimitivesBinder();
             var context = new ActionParameterBinderContext
             {
-                HttpRequest = new FakeHttpRequest(),
+                Request = new FakeHttpRequest(),
                 ParameterAttributes = new Attribute[0],
                 ParameterName = "a",
                 ParameterType = typeof(int[])
             };
-            context.HttpRequest.UrlParameters.Add(name, "1");
-            context.HttpRequest.UrlParameters.Add(name, "2");
+            context.Request.UrlParameters.Add(name, "1");
+            context.Request.UrlParameters.Add(name, "2");
             var result = (int[]) binder.Bind(context);
             CollectionAssert.AreEqual(new[] {1, 2}, result);
         }

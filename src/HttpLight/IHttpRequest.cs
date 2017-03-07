@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+
 #if FEATURE_ASYNC
 using System.Threading.Tasks;
 #endif
@@ -16,6 +18,11 @@ namespace HttpLight
         /// Gets the MIME types accepted by the client
         /// </summary>
         string[] AcceptTypes { get; }
+
+        /// <summary>
+        /// Temporary storage
+        /// </summary>
+        IDictionary<string, object> Bag { get; }
 
         /// <summary>
         /// Gets an error code that identifies a problem with the <see cref="System.Security.Cryptography.X509Certificates.X509Certificate"/>

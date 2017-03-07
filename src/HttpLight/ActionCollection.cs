@@ -8,11 +8,13 @@ namespace HttpLight
     {
         private IDictionary<string, IDictionary<HttpMethod, Action>> _usualActions;
         private IDictionary<HttpStatusCode, Action> _statusCodeActions;
+        private IList<Action> _beforeActions;
 
         public ActionCollection()
         {
             _usualActions = new Dictionary<string, IDictionary<HttpMethod, Action>>();
             _statusCodeActions = new Dictionary<HttpStatusCode, Action>();
+            _beforeActions = new List<Action>();
         }
 
         public void Add(HttpMethod method, string path, Action action)
@@ -30,6 +32,11 @@ namespace HttpLight
         public void Add(HttpStatusCode statusCode, Action action)
         {
             _statusCodeActions[statusCode] = action;
+        }
+
+        public void AddBefore(Action action)
+        {
+            _beforeActions.Add(action);
         }
 
         public Action Get(HttpMethod method, string path, out bool methodNotAllowed)
@@ -51,6 +58,11 @@ namespace HttpLight
             Action result;
             _statusCodeActions.TryGetValue(statusCode, out result);
             return result;
+        }
+
+        public IEnumerable<Action> GetBefore()
+        {
+            return _beforeActions;
         }
 
         public void Clear()

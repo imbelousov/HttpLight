@@ -1,22 +1,27 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Web;
+
 #if FEATURE_ASYNC
 using System.Threading.Tasks;
 #endif
-using System.Web;
 
 namespace HttpLight.Test.Utils
 {
     internal class FakeHttpRequest : IHttpRequest
     {
+        private const string DefaultBaseUrl = "http://localhost:8080/";
+
         private Uri _url;
         private NameValueCollection _urlParameters;
 
         public string[] AcceptTypes { get; set; }
+        public IDictionary<string, object> Bag { get; set; }
         public int ClientCertificateError { get; set; }
         public IHttpRequestContent Content { get; set; }
         public Encoding ContentEncoding { get; set; }
@@ -58,16 +63,17 @@ namespace HttpLight.Test.Utils
         public string UserAgent { get; set; }
         public string[] UserLanguages { get; set; }
 
+        public FakeHttpRequest()
+            : this(DefaultBaseUrl)
+        {
+        }
+
         public FakeHttpRequest(string url)
         {
             Content = new FakeHttpRequestContent();
             Method = HttpMethod.Get;
             Url = new Uri(url);
-        }
-
-        public FakeHttpRequest()
-            : this("http://localhost:8080/")
-        {
+            Bag = new Dictionary<string, object>();
         }
 
         public X509Certificate2 GetClientCertificate()

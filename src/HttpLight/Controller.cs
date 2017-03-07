@@ -5,35 +5,26 @@
     /// </summary>
     public abstract class Controller
     {
-        private IHttpRequest _request;
-        private IHttpResponse _response;
-
-        internal IHttpRequest InternalRequest
-        {
-            get { return _request; }
-            set { _request = value; }
-        }
-
-        internal IHttpResponse InternalResponse
-        {
-            get { return _response; }
-            set { _response = value; }
-        }
+        /// <summary>
+        /// An HTTP request info
+        /// </summary>
+        protected IHttpRequest Request { get; private set; }
 
         /// <summary>
-        /// HTTP request info
+        /// An HTTP response info
         /// </summary>
-        protected IHttpRequest Request
+        protected IHttpResponse Response { get; private set; }
+
+        internal void Initialize(IHttpRequest request, IHttpResponse response)
         {
-            get { return _request; }
+            Request = request;
+            Response = response;
         }
 
-        /// <summary>
-        /// HTTP response info
-        /// </summary>
-        protected IHttpResponse Response
+        internal void Release()
         {
-            get { return _response; }
+            Request = null;
+            Response = null;
         }
     }
 }

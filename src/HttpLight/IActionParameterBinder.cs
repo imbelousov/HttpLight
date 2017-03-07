@@ -15,6 +15,6 @@ namespace HttpLight
         public Type ParameterType { get; internal set; }
         public string ParameterName { get; internal set; }
         public Attribute[] ParameterAttributes { get; internal set; }
-        public IHttpRequest HttpRequest { get; internal set; }
+        public IHttpRequest Request { get; internal set; }
     }
 }

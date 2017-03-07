@@ -9,6 +9,7 @@ namespace HttpLight
         public ICollection<HttpMethod> Methods { get; }
         public ICollection<HttpStatusCode> StatusCodes { get; }
         public ICollection<string> Paths { get; }
+        public bool Before { get; set; }
 
         public Action(MethodInvoker invoker)
         {

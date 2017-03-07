@@ -47,6 +47,7 @@
     <Compile Include="Action.cs" />
     <Compile Include="ActionParameterBinderFactory.cs" />
     <Compile Include="Attributes\ActionAttribute.cs" />
+    <Compile Include="Attributes\BeforeAttribute.cs" />
     <Compile Include="Attributes\BinderAttribute.cs" />
     <Compile Include="Attributes\StatusCodeAttribute.cs" />
     <Compile Include="Attributes\PathAttribute.cs" />

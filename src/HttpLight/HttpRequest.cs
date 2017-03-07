@@ -1,14 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Web;
+using HttpLight.Utils;
+
 #if FEATURE_ASYNC
 using System.Threading.Tasks;
 #endif
-using HttpLight.Utils;
 
 namespace HttpLight
 {
@@ -19,6 +21,7 @@ namespace HttpLight
     {
         private static readonly Encoding DefaultEncoding = Encoding.UTF8;
 
+        private IDictionary<string, object> _bag;
         private IHttpRequestContent _content;
         private HttpListenerRequest _innerRequest;
         private HttpMethod _method;
@@ -26,6 +29,11 @@ namespace HttpLight
         public string[] AcceptTypes
         {
             get { return _innerRequest.AcceptTypes; }
+        }
+
+        public IDictionary<string, object> Bag
+        {
+            get { return _bag; }
         }
 
         public int ClientCertificateError
@@ -158,6 +166,7 @@ namespace HttpLight
             _innerRequest = innerRequest;
             _content = new HttpRequestContent(innerRequest.InputStream, ContentEncoding ?? DefaultEncoding);
             _method = HttpMethodHelper.Convert(innerRequest.HttpMethod);
+            _bag = new Dictionary<string, object>();
         }
 
         public X509Certificate2 GetClientCertificate()

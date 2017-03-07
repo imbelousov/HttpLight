@@ -35,6 +35,8 @@ namespace HttpLight
                 }
                 foreach (var httpStatusCode in action.StatusCodes)
                     _actions.Add(httpStatusCode, action);
+                if (action.Before)
+                    _actions.AddBefore(action);
             }
             _controllerTypes.Add(controllerType);
         }

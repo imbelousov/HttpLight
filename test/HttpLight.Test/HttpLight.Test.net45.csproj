@@ -57,6 +57,7 @@
     <Compile Include="UnitTests\ControllerCollectionTest.cs" />
     <Compile Include="UnitTests\RequestStateMachineTest.cs" />
     <Compile Include="UnitTests\ActionCollectionTest.cs" />
+    <Compile Include="Utils\ActionBuilder.cs" />
     <Compile Include="Utils\FakeHttpRequest.cs" />
     <Compile Include="UnitTests\FiniteStateMachineTest.cs" />
     <Compile Include="UnitTests\HttpMethodHelperTest.cs" />
@@ -66,6 +67,7 @@
     <Compile Include="UnitTests\SafeStringConvertTest.cs" />
     <Compile Include="UnitTests\StreamHelperTest.cs" />
     <Compile Include="Utils\FakeHttpResponse.cs" />
+    <Compile Include="Utils\FakeRequestStateMachineContext.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\HttpLight\HttpLight.net45.csproj">

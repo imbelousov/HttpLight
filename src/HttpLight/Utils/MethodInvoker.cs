@@ -160,7 +160,7 @@ namespace HttpLight.Utils
 #endif
     }
 
-    internal struct MethodParameter
+    internal class MethodParameter
     {
         public Type Type { get; set; }
         public string Name { get; set; }

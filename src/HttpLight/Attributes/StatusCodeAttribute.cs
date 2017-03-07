@@ -5,7 +5,7 @@
     /// </summary>
     public class StatusCodeAttribute : ActionAttribute
     {
-        public HttpStatusCode StatusCode { get; }
+        internal HttpStatusCode StatusCode { get; }
 
         public StatusCodeAttribute(HttpStatusCode statusCode)
         {

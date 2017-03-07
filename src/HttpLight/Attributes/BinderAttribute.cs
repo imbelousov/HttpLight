@@ -8,7 +8,7 @@ namespace HttpLight.Attributes
     [AttributeUsage(AttributeTargets.Parameter)]
     public class BinderAttribute : Attribute
     {
-        public Type Binder { get; }
+        internal Type Binder { get; }
 
         public BinderAttribute(Type binder)
         {

@@ -64,14 +64,25 @@ namespace HttpLight.Test.Utils
         public string[] UserLanguages { get; set; }
 
         public FakeHttpRequest()
-            : this(DefaultBaseUrl)
         {
         }
 
-        public FakeHttpRequest(string url)
+        public FakeHttpRequest(string path)
+            : this(path, HttpMethod.Get)
         {
+        }
+
+        public FakeHttpRequest(string path, HttpMethod method)
+            : this(DefaultBaseUrl, path, method)
+        {
+        }
+
+        public FakeHttpRequest(string baseUrl, string path, HttpMethod method)
+        {
+            baseUrl = GetBaseUrl(baseUrl);
+            var url = GetUrl(baseUrl, path);
             Content = new FakeHttpRequestContent();
-            Method = HttpMethod.Get;
+            Method = method;
             Url = new Uri(url);
             Bag = new Dictionary<string, object>();
         }
@@ -87,42 +98,45 @@ namespace HttpLight.Test.Utils
             throw new NotImplementedException();
         }
 #endif
+
+        private static string GetBaseUrl(string baseUrl)
+        {
+            baseUrl = baseUrl ?? DefaultBaseUrl;
+            if (!baseUrl.EndsWith("/"))
+                baseUrl = baseUrl + "/";
+            return baseUrl;
+        }
+
+        private static string GetUrl(string baseUrl, string path)
+        {
+            path = path ?? string.Empty;
+            if (path.StartsWith("/"))
+                path = path.Substring(1);
+            return baseUrl + path;
+        }
     }
 
     internal class FakeHttpRequestContent : IHttpRequestContent
     {
         public Stream Stream { get; set; }
+        public NameValueCollection ContentParameters { get; set; }
+        public string RawContent { get; set; }
 
-        public byte[] ReadArray()
+        public FakeHttpRequestContent()
+            : this(string.Empty)
         {
-            throw new NotImplementedException();
         }
 
-        public NameValueCollection ReadParameters()
+        public FakeHttpRequestContent(Stream stream)
         {
-            throw new NotImplementedException();
+            Stream = stream;
         }
 
-        public string ReadText()
+        public FakeHttpRequestContent(string text)
+            : this(new MemoryStream(Encoding.UTF8.GetBytes(text)))
         {
-            throw new NotImplementedException();
+            RawContent = text;
+            ContentParameters = HttpUtility.ParseQueryString(text);
         }
-
-#if FEATURE_ASYNC
-        public Task<byte[]> ReadArrayAsync()
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<NameValueCollection> ReadParametersAsync()
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<string> ReadTextAsync()
-        {
-            throw new NotImplementedException();
-        }
-#endif
     }
 }

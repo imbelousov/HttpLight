@@ -7,6 +7,8 @@ namespace HttpLight.Utils
 {
     internal static class StreamHelper
     {
+        private static readonly Encoding DefaultEncoding = Encoding.UTF8;
+
         private static IDictionary<Type, StreamConverter> _converters;
 
         static StreamHelper()
@@ -23,6 +25,7 @@ namespace HttpLight.Utils
                 return new MemoryStream(new byte[0]);
             var type = baseType ?? obj.GetType();
             StreamConverter converter;
+            encoding = encoding ?? DefaultEncoding;
             if (!_converters.TryGetValue(type, out converter))
                 return new MemoryStream(encoding.GetBytes(obj.GetType().FullName));
             return converter(obj, encoding);

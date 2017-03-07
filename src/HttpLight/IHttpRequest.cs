@@ -174,35 +174,15 @@ namespace HttpLight
         Stream Stream { get; }
 
         /// <summary>
-        /// Reads payload stream and returns byte array
+        /// Parameters passed through payload. Note that if you call getter, <see cref="Stream"/>
+        /// will be read to end, then parsed and results will be cached.
         /// </summary>
-        byte[] ReadArray();
+        NameValueCollection ContentParameters { get; }
 
         /// <summary>
-        /// Reads payload stream as URL-encoded parameters
+        /// Raw content passed through payload. Note that if you call getter, <see cref="Stream"/>
+        /// will be read to end and results will be cached.
         /// </summary>
-        NameValueCollection ReadParameters();
-
-        /// <summary>
-        /// Reads payload stream as text
-        /// </summary>
-        string ReadText();
-
-#if FEATURE_ASYNC
-        /// <summary>
-        /// Reads payload stream and returns byte array
-        /// </summary>
-        Task<byte[]> ReadArrayAsync();
-
-        /// <summary>
-        /// Reads payload stream as URL-encoded parameters
-        /// </summary>
-        Task<NameValueCollection> ReadParametersAsync();
-
-        /// <summary>
-        /// Reads payload stream as text
-        /// </summary>
-        Task<string> ReadTextAsync();
-#endif
+        string RawContent { get; }
     }
 }

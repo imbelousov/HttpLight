@@ -7,7 +7,7 @@ namespace HttpLight
     {
         public object Bind(ActionParameterBinderContext context)
         {
-            var values = context.Request.UrlParameters.GetValues(context.ParameterName);
+            var values = context.Source.GetValues(context.ParameterName);
             if (context.ParameterType.IsArray)
                 return SafeStringConvert.ChangeType(values, context.ParameterType.GetElementType());
             else

@@ -46,10 +46,13 @@
   <ItemGroup>
     <Compile Include="Action.cs" />
     <Compile Include="ActionParameterBinderFactory.cs" />
+    <Compile Include="ActionParameterSourceFactory.cs" />
     <Compile Include="Attributes\ActionAttribute.cs" />
     <Compile Include="Attributes\BeforeAttribute.cs" />
     <Compile Include="Attributes\BinderAttribute.cs" />
     <Compile Include="Attributes\DeleteAttribute.cs" />
+    <Compile Include="Attributes\FromContentAttribute.cs" />
+    <Compile Include="Attributes\FromUrlAttribute.cs" />
     <Compile Include="Attributes\PutAttribute.cs" />
     <Compile Include="Attributes\HeadAttribute.cs" />
     <Compile Include="Attributes\StatusCodeAttribute.cs" />
@@ -57,6 +60,7 @@
     <Compile Include="Attributes\PostAttribute.cs" />
     <Compile Include="Attributes\GetAttribute.cs" />
     <Compile Include="DefaultController.cs" />
+    <Compile Include="IActionParameterSource.cs" />
     <Compile Include="IHttpRequest.cs" />
     <Compile Include="IHttpResponse.cs" />
     <Compile Include="PrimitivesBinder.cs" />
@@ -71,6 +75,8 @@
     <Compile Include="IActionParameterBinder.cs" />
     <Compile Include="ControllerCollection.cs" />
     <Compile Include="RequestStateMachine.cs" />
+    <Compile Include="ContentActionParameterSource.cs" />
+    <Compile Include="UrlActionParameterSource.cs" />
     <Compile Include="Utils\FiniteStateMachine.cs" />
     <Compile Include="ActionCollection.cs" />
     <Compile Include="Utils\HttpMethodHelper.cs" />

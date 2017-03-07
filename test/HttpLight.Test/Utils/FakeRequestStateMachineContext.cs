@@ -12,51 +12,36 @@ namespace HttpLight.Test.Utils
         }
 
         public FakeRequestStateMachineContext(string path)
-            : this(null, path)
+            : this(new FakeHttpRequest(path))
         {
         }
 
         public FakeRequestStateMachineContext(string path, HttpMethod method)
-            : this(null, path, method)
-        {
-        }
-
-        public FakeRequestStateMachineContext(string baseUrl, string path)
-            : this(baseUrl, path, HttpMethod.Get)
+            : this(new FakeHttpRequest(path, method))
         {
         }
 
         public FakeRequestStateMachineContext(string baseUrl, string path, HttpMethod method)
+            : this(new FakeHttpRequest(baseUrl, path, method))
         {
-            baseUrl = GetBaseUrl(baseUrl);
-            var url = GetUrl(baseUrl, path);
-            var request = new FakeHttpRequest(url);
-            request.Method = method;
+        }
+
+        public FakeRequestStateMachineContext(FakeHttpRequest request)
+            : this(request, null)
+        {
+        }
+
+        public FakeRequestStateMachineContext(FakeHttpRequest request, Stream outputStream)
+        {
             var response = new FakeHttpResponse();
             Request = request;
             Response = response;
-            OutputStream = response.OutputStream;
+            OutputStream = outputStream ?? response.OutputStream;
         }
 
         public void SetOutputStream(Stream stream)
         {
             OutputStream = stream;
-        }
-
-        private string GetBaseUrl(string baseUrl)
-        {
-            baseUrl = baseUrl ?? DefaultBaseUrl;
-            if (!baseUrl.EndsWith("/"))
-                baseUrl = baseUrl + "/";
-            return baseUrl;
-        }
-
-        private string GetUrl(string baseUrl, string path)
-        {
-            path = path ?? string.Empty;
-            if (path.StartsWith("/"))
-                path = path.Substring(1);
-            return baseUrl + path;
         }
     }
 }

@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using HttpLight.Utils;
 
 #if FEATURE_ASYNC
@@ -15,6 +13,7 @@ namespace HttpLight
         private ActionCollection _actions;
         private InstanceCollection _controllers;
         private ActionParameterBinderFactory _binderFactory;
+        private ActionParameterSourceFactory _parameterSourceFactory;
 
         public ActionCollection Actions
         {
@@ -31,6 +30,7 @@ namespace HttpLight
             _actions = new ActionCollection();
             _controllers = new InstanceCollection();
             _binderFactory = new ActionParameterBinderFactory();
+            _parameterSourceFactory = new ActionParameterSourceFactory();
             AddState(RequestState.Begin, Begin);
             AddState(RequestState.SelectUsualAction, SelectUsualAction);
             AddState(RequestState.InvokeBeforeActions, InvokeBeforeActions);
@@ -277,18 +277,18 @@ namespace HttpLight
         }
 #endif
 
-        private object[] BindParameters(IHttpRequest request, IList<MethodParameter> actionParameters)
+        private object[] BindParameters(IHttpRequest request, Action action)
         {
-            var result = new object[actionParameters.Count];
-            for (var i = 0; i < actionParameters.Count; i++)
+            var result = new object[action.Invoker.Parameters.Count];
+            for (var i = 0; i < action.Invoker.Parameters.Count; i++)
             {
-                var parameter = actionParameters[i];
+                var parameter = action.Invoker.Parameters[i];
                 var binder = _binderFactory.GetBinder(parameter.Type, parameter.Attributes);
                 if (binder != null)
                 {
                     result[i] = binder.Bind(new ActionParameterBinderContext
                     {
-                        Request = request,
+                        Source = _parameterSourceFactory.CreateSource(request, parameter),
                         ParameterName = parameter.Name,
                         ParameterType = parameter.Type,
                         ParameterAttributes = parameter.Attributes
@@ -304,7 +304,7 @@ namespace HttpLight
         {
             var instance = (Controller) _controllers.GetObjectForThread(action.Invoker.InstanceType);
             instance.Initialize(context.Request, context.Response);
-            var parameters = BindParameters(context.Request, action.Invoker.Parameters);
+            var parameters = BindParameters(context.Request, action);
             var result = action.Invoker.Invoke(instance, parameters);
             instance.Release();
             return result;
@@ -315,7 +315,7 @@ namespace HttpLight
         {
             var instance = (Controller) _controllers.GetObjectForThread(action.Invoker.InstanceType);
             instance.Initialize(context.Request, context.Response);
-            var parameters = BindParameters(context.Request, action.Invoker.Parameters);
+            var parameters = BindParameters(context.Request, action);
             var result = action.Invoker.InvokeAsync(instance, parameters);
             instance.Release();
             return result;

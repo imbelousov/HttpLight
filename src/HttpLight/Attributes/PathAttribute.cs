@@ -5,7 +5,7 @@
     /// </summary>
     public class PathAttribute : ActionAttribute
     {
-        public string Path { get; }
+        internal string Path { get; }
 
         public PathAttribute(string path)
         {

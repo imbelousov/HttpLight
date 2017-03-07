@@ -193,10 +193,34 @@ namespace HttpLight
     {
         private Encoding _encoding;
         private Stream _stream;
+        private NameValueCollection _contentParameters;
+        private string _rawContent;
 
         public Stream Stream
         {
             get { return _stream; }
+        }
+
+        public NameValueCollection ContentParameters
+        {
+            get
+            {
+                if (_contentParameters != null)
+                    return _contentParameters;
+                _contentParameters = HttpUtility.ParseQueryString(RawContent, _encoding);
+                return _contentParameters;
+            }
+        }
+
+        public string RawContent
+        {
+            get
+            {
+                if (_rawContent != null)
+                    return _rawContent;
+                _rawContent = ReadAsText();
+                return _rawContent;
+            }
         }
 
         internal HttpRequestContent(Stream stream, Encoding encoding)
@@ -205,50 +229,14 @@ namespace HttpLight
             _encoding = encoding;
         }
 
-        public byte[] ReadArray()
+        private string ReadAsText()
         {
             using (var ms = new MemoryStream())
             {
                 _stream.CopyTo(ms);
                 ms.Position = 0;
-                return ms.ToArray();
+                return _encoding.GetString(ms.ToArray());
             }
         }
-
-        public NameValueCollection ReadParameters()
-        {
-            var text = ReadText();
-            return HttpUtility.ParseQueryString(text, _encoding);
-        }
-
-        public string ReadText()
-        {
-            var buf = ReadArray();
-            return _encoding.GetString(buf);
-        }
-
-#if FEATURE_ASYNC
-        public async Task<byte[]> ReadArrayAsync()
-        {
-            using (var ms = new MemoryStream())
-            {
-                await _stream.CopyToAsync(ms);
-                ms.Position = 0;
-                return ms.ToArray();
-            }
-        }
-
-        public async Task<NameValueCollection> ReadParametersAsync()
-        {
-            var text = await ReadTextAsync();
-            return HttpUtility.ParseQueryString(text, _encoding);
-        }
-
-        public async Task<string> ReadTextAsync()
-        {
-            var buf = await ReadArrayAsync();
-            return _encoding.GetString(buf);
-        }
-#endif
     }
 }

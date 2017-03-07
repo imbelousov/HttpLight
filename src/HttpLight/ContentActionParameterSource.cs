@@ -23,7 +23,7 @@ namespace HttpLight
                 .Content
                 .ContentParameters
                 .AllKeys
-                .Select(x => new KeyValuePair<string, string[]>(x, _request.UrlParameters.GetValues(x)));
+                .Select(x => new KeyValuePair<string, string[]>(x, _request.Content.ContentParameters.GetValues(x)));
         }
     }
 }

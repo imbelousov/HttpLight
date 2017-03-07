@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -60,9 +61,11 @@ namespace HttpLight
             return result;
         }
 
-        public IEnumerable<Action> GetBefore()
+        public IEnumerable<Action> GetBefore(Type controller)
         {
-            return _beforeActions;
+            if (controller == null)
+                return Enumerable.Empty<Action>();
+            return _beforeActions.Where(x => x.Invoker.InstanceType == controller);
         }
 
         public void Clear()

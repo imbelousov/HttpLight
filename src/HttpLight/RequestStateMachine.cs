@@ -79,8 +79,7 @@ namespace HttpLight
         {
             try
             {
-                var instanceType = context.Action != null ? context.Action.Invoker.InstanceType : null;
-                var beforeActions = _actions.GetBefore().Where(x => instanceType != null && x.Invoker.InstanceType == instanceType);
+                var beforeActions = _actions.GetBefore(context.Action != null ? context.Action.Invoker.InstanceType : null);
                 foreach (var beforeAction in beforeActions)
                 {
                     var result = InvokeAction(beforeAction, context);
@@ -109,7 +108,7 @@ namespace HttpLight
         {
             try
             {
-                var beforeActions = _actions.GetBefore();
+                var beforeActions = _actions.GetBefore(context.Action != null ? context.Action.Invoker.InstanceType : null);
                 foreach (var beforeAction in beforeActions)
                 {
                     var result = await InvokeActionAsync(beforeAction, context);

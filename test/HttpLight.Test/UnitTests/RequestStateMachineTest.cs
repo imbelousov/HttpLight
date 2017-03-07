@@ -56,40 +56,10 @@ namespace HttpLight.Test.UnitTests
                     ExpectedResult = new Tuple<RequestState, HttpStatusCode, string>(RequestState.SendResponse, default(HttpStatusCode), "1"),
                     TestName = "Return string"
                 };
-                yield return new TestCaseData(new[] {"1", null}, new[] {false, false})
-                {
-                    ExpectedResult = new Tuple<RequestState, HttpStatusCode, string>(RequestState.SendResponse, default(HttpStatusCode), "1"),
-                    TestName = "Returns first action"
-                };
-                yield return new TestCaseData(new[] {null, "2"}, new[] {false, false})
-                {
-                    ExpectedResult = new Tuple<RequestState, HttpStatusCode, string>(RequestState.SendResponse, default(HttpStatusCode), "2"),
-                    TestName = "Returns second action"
-                };
-                yield return new TestCaseData(new[] {"1", "2"}, new[] {false, false})
-                {
-                    ExpectedResult = new Tuple<RequestState, HttpStatusCode, string>(RequestState.SendResponse, default(HttpStatusCode), "1"),
-                    TestName = "Return both actions"
-                };
                 yield return new TestCaseData(new string[] {null}, new[] {true})
                 {
                     ExpectedResult = new Tuple<RequestState, HttpStatusCode, string>(RequestState.SelectStatusCodeAction, HttpStatusCode.InternalServerError, string.Empty),
                     TestName = "Throw"
-                };
-                yield return new TestCaseData(new[] {"1", "2"}, new[] {true, false})
-                {
-                    ExpectedResult = new Tuple<RequestState, HttpStatusCode, string>(RequestState.SelectStatusCodeAction, HttpStatusCode.InternalServerError, string.Empty),
-                    TestName = "Throws first action"
-                };
-                yield return new TestCaseData(new[] {"1", "2"}, new[] {false, true})
-                {
-                    ExpectedResult = new Tuple<RequestState, HttpStatusCode, string>(RequestState.SendResponse, default(HttpStatusCode), "1"),
-                    TestName = "Throws second action, first returns"
-                };
-                yield return new TestCaseData(new[] {null, "2"}, new[] {false, true})
-                {
-                    ExpectedResult = new Tuple<RequestState, HttpStatusCode, string>(RequestState.SelectStatusCodeAction, HttpStatusCode.InternalServerError, string.Empty),
-                    TestName = "Throws second action, first doesn't return"
                 };
             }
         }
@@ -179,6 +149,7 @@ namespace HttpLight.Test.UnitTests
         public object InvokeBeforeActions(string[] returnValues, bool[] throws)
         {
             var stateMachine = new RequestStateMachine();
+            var context = new FakeRequestStateMachineContext();
             for (var i = 0; i < returnValues.Length; i++)
             {
                 var returnValue = returnValues[i];
@@ -189,8 +160,8 @@ namespace HttpLight.Test.UnitTests
                     actionBuilder = actionBuilder.Throws(typeof(Exception));
                 var action = actionBuilder.Build();
                 stateMachine.Actions.AddBefore(action);
+                context.Action = action;
             }
-            var context = new FakeRequestStateMachineContext();
             var state = stateMachine.InvokeBeforeActions(context);
             return new Tuple<RequestState, HttpStatusCode, string>(state, context.Response.StatusCode, StreamToString(context.Result));
         }
@@ -200,6 +171,7 @@ namespace HttpLight.Test.UnitTests
         public object InvokeBeforeActionsAsync(string[] returnValues, bool[] throws)
         {
             var stateMachine = new RequestStateMachine();
+            var context = new FakeRequestStateMachineContext();
             for (var i = 0; i < returnValues.Length; i++)
             {
                 var returnValue = returnValues[i];
@@ -210,8 +182,8 @@ namespace HttpLight.Test.UnitTests
                     actionBuilder = actionBuilder.Throws(typeof(Exception));
                 var action = actionBuilder.Build();
                 stateMachine.Actions.AddBefore(action);
+                context.Action = action;
             }
-            var context = new FakeRequestStateMachineContext();
             var state = stateMachine.InvokeBeforeActionsAsync(context).Result;
             return new Tuple<RequestState, HttpStatusCode, string>(state, context.Response.StatusCode, StreamToString(context.Result));
         }

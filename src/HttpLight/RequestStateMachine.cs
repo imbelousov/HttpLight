@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
+using System.Linq;
 using HttpLight.Utils;
 
 #if FEATURE_ASYNC
@@ -12,8 +12,6 @@ namespace HttpLight
 {
     internal class RequestStateMachine : FiniteStateMachine<RequestState, RequestStateMachineContext>
     {
-        private static readonly Encoding DefaultEncoding = Encoding.UTF8;
-
         private ActionCollection _actions;
         private InstanceCollection _controllers;
         private ActionParameterBinderFactory _binderFactory;
@@ -81,7 +79,8 @@ namespace HttpLight
         {
             try
             {
-                var beforeActions = _actions.GetBefore();
+                var instanceType = context.Action != null ? context.Action.Invoker.InstanceType : null;
+                var beforeActions = _actions.GetBefore().Where(x => instanceType != null && x.Invoker.InstanceType == instanceType);
                 foreach (var beforeAction in beforeActions)
                 {
                     var result = InvokeAction(beforeAction, context);

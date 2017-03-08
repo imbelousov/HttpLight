@@ -311,12 +311,12 @@ namespace HttpLight
         }
 
 #if FEATURE_ASYNC
-        private Task<object> InvokeActionAsync(Action action, RequestStateMachineContext context)
+        private async Task<object> InvokeActionAsync(Action action, RequestStateMachineContext context)
         {
             var instance = (Controller) _controllers.GetObjectForThread(action.Invoker.InstanceType);
             instance.Initialize(context.Request, context.Response);
             var parameters = BindParameters(context.Request, action);
-            var result = action.Invoker.InvokeAsync(instance, parameters);
+            var result = await action.Invoker.InvokeAsync(instance, parameters);
             instance.Release();
             return result;
         }

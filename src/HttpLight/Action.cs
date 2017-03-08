@@ -6,7 +6,7 @@ namespace HttpLight
     internal class Action
     {
         public MethodInvoker Invoker { get; }
-        public ICollection<HttpMethod> Methods { get; }
+        public ICollection<string> Methods { get; }
         public ICollection<HttpStatusCode> StatusCodes { get; }
         public ICollection<string> Paths { get; }
         public bool Before { get; set; }
@@ -14,7 +14,7 @@ namespace HttpLight
         public Action(MethodInvoker invoker)
         {
             Invoker = invoker;
-            Methods = new HashSet<HttpMethod>();
+            Methods = new HashSet<string>();
             StatusCodes = new HashSet<HttpStatusCode>();
             Paths = new HashSet<string>();
         }

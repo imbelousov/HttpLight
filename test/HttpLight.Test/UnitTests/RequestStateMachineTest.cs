@@ -135,7 +135,7 @@ namespace HttpLight.Test.UnitTests
         }
 
         [TestCaseSource(nameof(SelectUsualActionData))]
-        public object SelectUsualAction(string actionPath, HttpMethod actionMethod, string requestPath, HttpMethod requestMethod)
+        public object SelectUsualAction(string actionPath, string actionMethod, string requestPath, string requestMethod)
         {
             var stateMachine = new RequestStateMachine();
             var context = new FakeRequestStateMachineContext(requestPath, requestMethod);

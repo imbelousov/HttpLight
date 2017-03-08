@@ -3,11 +3,11 @@
     /// <summary>
     /// Marks method to be used for PUT requests
     /// </summary>
-    public class PutAttribute : ActionAttribute
+    public class PutAttribute : MethodAttribute
     {
-        internal override void Apply(Action action)
+        public PutAttribute()
+            : base(HttpMethod.Put)
         {
-            action.Methods.Add(HttpMethod.Put);
         }
     }
 }

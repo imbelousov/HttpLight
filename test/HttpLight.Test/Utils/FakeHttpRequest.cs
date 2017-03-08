@@ -36,7 +36,7 @@ namespace HttpLight.Test.Utils
         public bool IsWebSocketRequest { get; set; }
         public bool KeepAlive { get; set; }
         public IPEndPoint LocalEndPoint { get; set; }
-        public HttpMethod Method { get; set; }
+        public string Method { get; set; }
         public Version ProtocolVersion { get; set; }
         public IPEndPoint RemoteEndPoint { get; set; }
         public Guid RequestTraceIdentifier { get; set; }
@@ -72,12 +72,12 @@ namespace HttpLight.Test.Utils
         {
         }
 
-        public FakeHttpRequest(string path, HttpMethod method)
+        public FakeHttpRequest(string path, string method)
             : this(DefaultBaseUrl, path, method)
         {
         }
 
-        public FakeHttpRequest(string baseUrl, string path, HttpMethod method)
+        public FakeHttpRequest(string baseUrl, string path, string method)
         {
             baseUrl = GetBaseUrl(baseUrl);
             var url = GetUrl(baseUrl, path);

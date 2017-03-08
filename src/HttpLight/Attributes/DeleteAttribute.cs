@@ -3,11 +3,11 @@
     /// <summary>
     /// Marks method to be used for DELETE requests
     /// </summary>
-    public class DeleteAttribute : ActionAttribute
+    public class DeleteAttribute : MethodAttribute
     {
-        internal override void Apply(Action action)
+        public DeleteAttribute()
+            : base(HttpMethod.Delete)
         {
-            action.Methods.Add(HttpMethod.Put);
         }
     }
 }

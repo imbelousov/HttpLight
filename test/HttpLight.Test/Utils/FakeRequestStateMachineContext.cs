@@ -16,12 +16,12 @@ namespace HttpLight.Test.Utils
         {
         }
 
-        public FakeRequestStateMachineContext(string path, HttpMethod method)
+        public FakeRequestStateMachineContext(string path, string method)
             : this(new FakeHttpRequest(path, method))
         {
         }
 
-        public FakeRequestStateMachineContext(string baseUrl, string path, HttpMethod method)
+        public FakeRequestStateMachineContext(string baseUrl, string path, string method)
             : this(new FakeHttpRequest(baseUrl, path, method))
         {
         }

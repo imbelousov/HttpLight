@@ -3,11 +3,11 @@
     /// <summary>
     /// Marks method to be used for GET requests
     /// </summary>
-    public class GetAttribute : ActionAttribute
+    public class GetAttribute : MethodAttribute
     {
-        internal override void Apply(Action action)
+        public GetAttribute()
+            : base(HttpMethod.Get)
         {
-            action.Methods.Add(HttpMethod.Get);
         }
     }
 }

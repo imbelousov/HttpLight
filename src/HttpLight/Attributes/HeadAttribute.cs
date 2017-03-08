@@ -3,11 +3,11 @@
     /// <summary>
     /// Marks method to be used for HEAD requests
     /// </summary>
-    public class HeadAttribute : ActionAttribute
+    public class HeadAttribute : MethodAttribute
     {
-        internal override void Apply(Action action)
+        public HeadAttribute()
+            : base(HttpMethod.Head)
         {
-            action.Methods.Add(HttpMethod.Head);
         }
     }
 }

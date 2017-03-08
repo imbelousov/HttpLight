@@ -64,7 +64,6 @@
     <Compile Include="Utils\ActionBuilder.cs" />
     <Compile Include="Utils\FakeHttpRequest.cs" />
     <Compile Include="UnitTests\FiniteStateMachineTest.cs" />
-    <Compile Include="UnitTests\HttpMethodHelperTest.cs" />
     <Compile Include="UnitTests\InstanceCollectionTest.cs" />
     <Compile Include="UnitTests\MethodInvokerTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

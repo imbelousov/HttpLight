@@ -101,7 +101,7 @@ namespace HttpLight
         /// <summary>
         /// HTTP method
         /// </summary>
-        HttpMethod Method { get; }
+        string Method { get; }
 
         /// <summary>
         /// Gets the HTTP version used by the requesting client

@@ -3,11 +3,11 @@
     /// <summary>
     /// Marks method to be used for POST requests
     /// </summary>
-    public class PostAttribute : ActionAttribute
+    public class PostAttribute : MethodAttribute
     {
-        internal override void Apply(Action action)
+        public PostAttribute()
+            : base(HttpMethod.Post)
         {
-            action.Methods.Add(HttpMethod.Post);
         }
     }
 }

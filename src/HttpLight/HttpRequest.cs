@@ -24,7 +24,6 @@ namespace HttpLight
         private IDictionary<string, object> _bag;
         private IHttpRequestContent _content;
         private HttpListenerRequest _innerRequest;
-        private HttpMethod _method;
 
         public string[] AcceptTypes
         {
@@ -113,9 +112,9 @@ namespace HttpLight
             get { return _innerRequest.LocalEndPoint; }
         }
 
-        public HttpMethod Method
+        public string Method
         {
-            get { return _method; }
+            get { return _innerRequest.HttpMethod; }
         }
 
         public Version ProtocolVersion
@@ -172,7 +171,6 @@ namespace HttpLight
         {
             _innerRequest = innerRequest;
             _content = new HttpRequestContent(innerRequest.InputStream, ContentEncoding ?? DefaultEncoding);
-            _method = HttpMethodHelper.Convert(innerRequest.HttpMethod);
             _bag = new Dictionary<string, object>();
         }
 

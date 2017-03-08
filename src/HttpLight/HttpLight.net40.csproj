@@ -54,6 +54,7 @@
     <Compile Include="Attributes\FromContentAttribute.cs" />
     <Compile Include="Attributes\FromUrlAttribute.cs" />
     <Compile Include="Attributes\HeadAttribute.cs" />
+    <Compile Include="Attributes\MethodAttribute.cs" />
     <Compile Include="Attributes\PutAttribute.cs" />
     <Compile Include="Attributes\StatusCodeAttribute.cs" />
     <Compile Include="Attributes\PathAttribute.cs" />
@@ -80,7 +81,6 @@
     <Compile Include="RequestStateMachine.cs" />
     <Compile Include="UrlActionParameterSource.cs" />
     <Compile Include="Utils\FiniteStateMachine.cs" />
-    <Compile Include="Utils\HttpMethodHelper.cs" />
     <Compile Include="Utils\InstanceCollection.cs" />
     <Compile Include="Utils\MethodInvoker.cs" />
     <Compile Include="Utils\SafeStringConvert.cs" />

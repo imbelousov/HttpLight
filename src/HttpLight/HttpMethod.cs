@@ -1,12 +1,11 @@
 ﻿namespace HttpLight
 {
-    public enum HttpMethod : byte
+    public static class HttpMethod
     {
-        Unknown,
-        Get,
-        Head,
-        Post,
-        Put,
-        Delete
+        public const string Get = "GET";
+        public const string Head = "HEAD";
+        public const string Post = "POST";
+        public const string Put = "PUT";
+        public const string Delete = "DELETE";
     }
 }

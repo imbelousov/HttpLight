@@ -97,7 +97,7 @@ namespace HttpLight
                 context.Result = null;
                 return RequestState.SelectStatusCodeAction;
             }
-            return RequestState.InvokeUsualAction;
+            return context.Action != null ? RequestState.InvokeUsualAction : RequestState.SelectStatusCodeAction;
         }
 
 #if FEATURE_ASYNC
@@ -126,7 +126,7 @@ namespace HttpLight
                 context.Result = null;
                 return RequestState.SelectStatusCodeAction;
             }
-            return RequestState.InvokeUsualAction;
+            return context.Action != null ? RequestState.InvokeUsualAction : RequestState.SelectStatusCodeAction;
         }
 #endif
 

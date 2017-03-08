@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Numerics;
 using System.Threading;
 
@@ -12,42 +13,49 @@ namespace HttpLight.Utils
     /// </summary>
     public static class SafeStringConvert
     {
-        private static IDictionary<Type, Converter> _converters;
+        private static readonly IDictionary<Type, Converter> Converters;
+        private static readonly Type[] Collections;
 
         static SafeStringConvert()
         {
-            _converters = new Dictionary<Type, Converter>();
-            _converters[typeof(string)] = ToString;
-            _converters[typeof(byte)] = ToByte;
-            _converters[typeof(byte?)] = ToNullableByte;
-            _converters[typeof(sbyte)] = ToSByte;
-            _converters[typeof(sbyte?)] = ToNullableSByte;
-            _converters[typeof(char)] = ToChar;
-            _converters[typeof(char?)] = ToNullableChar;
-            _converters[typeof(short)] = ToInt16;
-            _converters[typeof(short?)] = ToNullableInt16;
-            _converters[typeof(ushort)] = ToUInt16;
-            _converters[typeof(ushort?)] = ToNullableUInt16;
-            _converters[typeof(int)] = ToInt32;
-            _converters[typeof(int?)] = ToNullableInt32;
-            _converters[typeof(uint)] = ToUInt32;
-            _converters[typeof(uint?)] = ToNullableUInt32;
-            _converters[typeof(long)] = ToInt64;
-            _converters[typeof(long?)] = ToNullableInt64;
-            _converters[typeof(ulong)] = ToUInt64;
-            _converters[typeof(ulong?)] = ToNullableUInt64;
-            _converters[typeof(BigInteger)] = ToBigInteger;
-            _converters[typeof(BigInteger?)] = ToNullableBigInteger;
-            _converters[typeof(float)] = ToSingle;
-            _converters[typeof(float?)] = ToNullableSingle;
-            _converters[typeof(double)] = ToDouble;
-            _converters[typeof(double?)] = ToNullableDouble;
-            _converters[typeof(decimal)] = ToDecimal;
-            _converters[typeof(decimal?)] = ToNullableDecimal;
-            _converters[typeof(bool)] = ToBoolean;
-            _converters[typeof(bool?)] = ToNullableBoolean;
-            _converters[typeof(Guid)] = ToGuid;
-            _converters[typeof(Guid?)] = ToNullableGuid;
+            Converters = new Dictionary<Type, Converter>();
+            Converters[typeof(string)] = ToString;
+            Converters[typeof(byte)] = ToByte;
+            Converters[typeof(byte?)] = ToNullableByte;
+            Converters[typeof(sbyte)] = ToSByte;
+            Converters[typeof(sbyte?)] = ToNullableSByte;
+            Converters[typeof(char)] = ToChar;
+            Converters[typeof(char?)] = ToNullableChar;
+            Converters[typeof(short)] = ToInt16;
+            Converters[typeof(short?)] = ToNullableInt16;
+            Converters[typeof(ushort)] = ToUInt16;
+            Converters[typeof(ushort?)] = ToNullableUInt16;
+            Converters[typeof(int)] = ToInt32;
+            Converters[typeof(int?)] = ToNullableInt32;
+            Converters[typeof(uint)] = ToUInt32;
+            Converters[typeof(uint?)] = ToNullableUInt32;
+            Converters[typeof(long)] = ToInt64;
+            Converters[typeof(long?)] = ToNullableInt64;
+            Converters[typeof(ulong)] = ToUInt64;
+            Converters[typeof(ulong?)] = ToNullableUInt64;
+            Converters[typeof(BigInteger)] = ToBigInteger;
+            Converters[typeof(BigInteger?)] = ToNullableBigInteger;
+            Converters[typeof(float)] = ToSingle;
+            Converters[typeof(float?)] = ToNullableSingle;
+            Converters[typeof(double)] = ToDouble;
+            Converters[typeof(double?)] = ToNullableDouble;
+            Converters[typeof(decimal)] = ToDecimal;
+            Converters[typeof(decimal?)] = ToNullableDecimal;
+            Converters[typeof(bool)] = ToBoolean;
+            Converters[typeof(bool?)] = ToNullableBoolean;
+            Converters[typeof(Guid)] = ToGuid;
+            Converters[typeof(Guid?)] = ToNullableGuid;
+            Collections = new[]
+            {
+                typeof(IEnumerable<>),
+                typeof(ICollection<>),
+                typeof(IList<>)
+            };
         }
 
         /// <summary>
@@ -55,7 +63,9 @@ namespace HttpLight.Utils
         /// </summary>
         public static bool IsTypeSupported(Type type)
         {
-            return _converters.ContainsKey(type);
+            if (IsCollection(type))
+                type = GetElementType(type);
+            return Converters.ContainsKey(type);
         }
 
         /// <summary>
@@ -72,7 +82,7 @@ namespace HttpLight.Utils
         public static object ChangeType(string s, Type type, IFormatProvider provider)
         {
             Converter converter;
-            if (!_converters.TryGetValue(type, out converter))
+            if (!Converters.TryGetValue(type, out converter))
                 throw new Exception("Type " + type.Name + " is not supported");
             return converter(s, provider);
         }
@@ -99,6 +109,28 @@ namespace HttpLight.Utils
                 result.SetValue(item, i);
             }
             return result;
+        }
+
+        /// <summary>
+        /// Checks if specified type is collection that can be handled
+        /// </summary>
+        internal static bool IsCollection(Type type)
+        {
+            if (type.IsArray)
+                return true;
+            if (type.IsGenericType)
+                type = type.GetGenericTypeDefinition();
+            return Collections.Contains(type);
+        }
+
+        /// <summary>
+        /// Extracts element type of the collection
+        /// </summary>
+        internal static Type GetElementType(Type collectionType)
+        {
+            return collectionType.IsArray
+                ? collectionType.GetElementType()
+                : collectionType.GetGenericArguments()[0];
         }
 
         private static object ToString(string s, IFormatProvider provider)

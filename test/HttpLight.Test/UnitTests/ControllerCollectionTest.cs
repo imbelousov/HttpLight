@@ -70,7 +70,7 @@ namespace HttpLight.Test.UnitTests
     internal class ControllerCollectionTestController : Controller
     {
         [Get]
-        public void TestGet([Binder(typeof(PrimitivesBinder))] int a, int b)
+        public void TestGet([Binder(typeof(PrimitiveBinder))] int a, int b)
         {
         }
 

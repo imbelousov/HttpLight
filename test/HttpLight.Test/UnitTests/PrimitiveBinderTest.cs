@@ -5,14 +5,14 @@ using NUnit.Framework;
 namespace HttpLight.Test.UnitTests
 {
     [TestFixture]
-    public class PrimitivesBinderTest
+    public class PrimitiveBinderTest
     {
         [TestCase("a", "1", "a", typeof(int), ExpectedResult = 1, TestName = "Value type")]
         [TestCase("a", "asd", "a", typeof(string), ExpectedResult = "asd", TestName = "Reference type")]
         [TestCase("b", "1", "a", typeof(int?), ExpectedResult = null, TestName = "Default value")]
         public object Bind(string urlName, string urlValue, string parameterName, Type type)
         {
-            var binder = new PrimitivesBinder();
+            var binder = new PrimitiveBinder();
             var context = new ActionParameterBinderContext
             {
                 Source = new UrlActionParameterSource(new FakeHttpRequest("/?" + urlName + "=" + urlValue)),
@@ -27,7 +27,7 @@ namespace HttpLight.Test.UnitTests
         [Test]
         public void BindArray()
         {
-            var binder = new PrimitivesBinder();
+            var binder = new PrimitiveBinder();
             var context = new ActionParameterBinderContext
             {
                 Source = new UrlActionParameterSource(new FakeHttpRequest("/?a=1&a=2")),

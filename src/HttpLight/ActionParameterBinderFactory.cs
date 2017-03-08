@@ -35,7 +35,7 @@ namespace HttpLight
         private Type GetDefaultBinderFor(Type parameterType)
         {
             if (SafeStringConvert.IsTypeSupported(parameterType))
-                return typeof(PrimitivesBinder);
+                return typeof(PrimitiveBinder);
             return null;
         }
 

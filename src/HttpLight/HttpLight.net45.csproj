@@ -63,7 +63,7 @@
     <Compile Include="IActionParameterSource.cs" />
     <Compile Include="IHttpRequest.cs" />
     <Compile Include="IHttpResponse.cs" />
-    <Compile Include="PrimitivesBinder.cs" />
+    <Compile Include="PrimitiveBinder.cs" />
     <Compile Include="HostCollection.cs" />
     <Compile Include="HttpContentType.cs" />
     <Compile Include="HttpRequest.cs" />

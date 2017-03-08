@@ -57,8 +57,8 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="UnitTests\PrimitivesBinderTest.cs" />
     <Compile Include="UnitTests\ControllerCollectionTest.cs" />
+    <Compile Include="UnitTests\PrimitiveBinderTest.cs" />
     <Compile Include="UnitTests\RequestStateMachineTest.cs" />
     <Compile Include="UnitTests\ActionCollectionTest.cs" />
     <Compile Include="Utils\ActionBuilder.cs" />

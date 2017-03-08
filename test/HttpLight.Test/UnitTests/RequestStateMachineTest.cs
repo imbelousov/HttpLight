@@ -38,7 +38,7 @@ namespace HttpLight.Test.UnitTests
             {
                 yield return new TestCaseData(new string[0], new bool[0])
                 {
-                    ExpectedResult = new Tuple<RequestState, HttpStatusCode, string>(RequestState.InvokeUsualAction, default(HttpStatusCode), string.Empty),
+                    ExpectedResult = new Tuple<RequestState, HttpStatusCode, string>(RequestState.SelectStatusCodeAction, default(HttpStatusCode), string.Empty),
                     TestName = "No actions"
                 };
                 yield return new TestCaseData(new string[] {null}, new[] {false})

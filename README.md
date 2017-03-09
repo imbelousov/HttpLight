@@ -150,3 +150,36 @@ public void Action([Binder(typeof(CustomBinder))] CustomModel x)
 }
 ```
 Test this with request to http://localhost:8080/Action?xa=1&xb=2.
+
+#### 2.2. Custom status page
+
+You can customize error pages such as 404 or 500. To achieve this, mark your action with `[StatusCode]` attribute and specify status code as argument:
+```c#
+[StatusCode(HttpStatusCode.NotFound)]
+public string NotFound()
+{
+    return "404";
+}
+```
+
+#### 2.3. Common action before any request
+
+It can be useful if you want to check headers and cookies or implement authentication. Mark your action with `[Before]` attribute and return nothing (void or null) to continue processing or something if request must be abandoned:
+```c#
+[Before]
+public string CheckSession()
+{
+    var sessionCookie = Request.Cookies["SessionId"];
+    if (sessionCookie == null)
+        return "Session is not started";
+    Request.Bag["SessionId"] = sessionCookie.Value;
+    return null;
+}
+
+[Get]
+public void Action()
+{
+    var sessionId = (string) Request.Bag["SessionId"];
+}
+```
+Action will be invoked only if cookie that contains session identifier is defined.

@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using HttpLight.Utils;
+﻿using HttpLight.Test.Utils;
 using NUnit.Framework;
 
 namespace HttpLight.Test.UnitTests
@@ -11,7 +10,7 @@ namespace HttpLight.Test.UnitTests
         public void UsualAction_Success()
         {
             var actions = new ActionCollection();
-            var action = CreateAction();
+            var action = new ActionBuilder("Test").Build();
             actions.Add(HttpMethod.Get, "/path", action);
             bool methodNotAllowed;
             var result = actions.Get(HttpMethod.Get, "/path", out methodNotAllowed);
@@ -22,7 +21,7 @@ namespace HttpLight.Test.UnitTests
         public void StatusCodeAction_Success()
         {
             var actions = new ActionCollection();
-            var action = CreateAction();
+            var action = new ActionBuilder("Test").Build();
             actions.Add(HttpStatusCode.NotFound, action);
             var result = actions.Get(HttpStatusCode.NotFound);
             Assert.AreEqual(action, result);
@@ -32,8 +31,8 @@ namespace HttpLight.Test.UnitTests
         public void UsualAction_TwoEntries()
         {
             var actions = new ActionCollection();
-            var action1 = CreateAction();
-            var action2 = CreateAction();
+            var action1 = new ActionBuilder("Test1").Build();
+            var action2 = new ActionBuilder("Test2").Build();
             actions.Add(HttpMethod.Get, "/path1", action1);
             actions.Add(HttpMethod.Get, "/path2", action2);
             bool methodNotAllowed;
@@ -48,8 +47,8 @@ namespace HttpLight.Test.UnitTests
         public void StatusCodeAction_TwoEntries()
         {
             var actions = new ActionCollection();
-            var action1 = CreateAction();
-            var action2 = CreateAction();
+            var action1 = new ActionBuilder("Test1").Build();
+            var action2 = new ActionBuilder("Test2").Build();
             actions.Add(HttpStatusCode.NotFound, action1);
             actions.Add(HttpStatusCode.InternalServerError, action2);
             var result1 = actions.Get(HttpStatusCode.NotFound);
@@ -63,8 +62,8 @@ namespace HttpLight.Test.UnitTests
         public void UsualAction_Override()
         {
             var actions = new ActionCollection();
-            var action1 = CreateAction();
-            var action2 = CreateAction();
+            Action action1, action2;
+            action1 = action2 = new ActionBuilder("Test").Build();
             actions.Add(HttpMethod.Get, "/path", action1);
             actions.Add(HttpMethod.Get, "/path", action2);
             bool methodNotAllowed;
@@ -76,8 +75,8 @@ namespace HttpLight.Test.UnitTests
         public void StatusCodeAction_Override()
         {
             var actions = new ActionCollection();
-            var action1 = CreateAction();
-            var action2 = CreateAction();
+            Action action1, action2;
+            action1 = action2 = new ActionBuilder("Test").Build();
             actions.Add(HttpStatusCode.NotFound, action1);
             actions.Add(HttpStatusCode.NotFound, action2);
             var result = actions.Get(HttpStatusCode.NotFound);
@@ -98,7 +97,7 @@ namespace HttpLight.Test.UnitTests
         public void UsualAction_MethodNotAllowed()
         {
             var actions = new ActionCollection();
-            var action = CreateAction();
+            var action = new ActionBuilder("Test").Build();
             actions.Add(HttpMethod.Get, "/path", action);
             bool methodNotAllowed;
             var result = actions.Get(HttpMethod.Post, "/path", out methodNotAllowed);
@@ -121,7 +120,7 @@ namespace HttpLight.Test.UnitTests
         public void UsualAction_Path(string addPath, string getPath)
         {
             var actions = new ActionCollection();
-            var action = CreateAction();
+            var action = new ActionBuilder("Test").Build();
             actions.Add(HttpMethod.Get, addPath, action);
             bool methodNotAllowed;
             var result = actions.Get(HttpMethod.Get, getPath, out methodNotAllowed);
@@ -132,7 +131,7 @@ namespace HttpLight.Test.UnitTests
         public void UsualAction_Clear()
         {
             var actions = new ActionCollection();
-            var action = CreateAction();
+            var action = new ActionBuilder("Test").Build();
             actions.Add(HttpMethod.Get, "/path", action);
             actions.Clear();
             bool methodNotAllowed;
@@ -144,23 +143,11 @@ namespace HttpLight.Test.UnitTests
         public void StatusCodeAction_Clear()
         {
             var actions = new ActionCollection();
-            var action = CreateAction();
+            var action = new ActionBuilder("Test").Build();
             actions.Add(HttpStatusCode.NotFound, action);
             actions.Clear();
             var result = actions.Get(HttpStatusCode.NotFound);
             Assert.IsNull(result);
-        }
-
-        private Action CreateAction()
-        {
-            var methodInfo = GetType().GetMethod(nameof(TestMethod), BindingFlags.Instance | BindingFlags.NonPublic);
-            var invoker = new MethodInvoker(methodInfo, GetType());
-            var action = new Action(invoker);
-            return action;
-        }
-
-        private void TestMethod()
-        {
         }
     }
 }

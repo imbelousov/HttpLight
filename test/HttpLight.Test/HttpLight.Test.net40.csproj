@@ -71,6 +71,7 @@
     <Compile Include="UnitTests\StreamHelperTest.cs" />
     <Compile Include="Utils\FakeHttpResponse.cs" />
     <Compile Include="Utils\FakeRequestStateMachineContext.cs" />
+    <Compile Include="Utils\RequestStateMachineScenario.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\HttpLight\HttpLight.net40.csproj">

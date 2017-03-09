@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using HttpLight.Attributes;
 using HttpLight.Test.Utils;
 using NUnit.Framework;
 
@@ -121,6 +122,164 @@ namespace HttpLight.Test.UnitTests
                 {
                     ExpectedResult = new Tuple<RequestState, string>(RequestState.End, string.Empty),
                     TestName = "Two exceptions"
+                };
+            }
+        }
+
+        private static IEnumerable<TestCaseData> StartData
+        {
+            get
+            {
+                yield return new TestCaseData(new RequestStateMachineScenario())
+                {
+                    ExpectedResult = new Tuple<HttpStatusCode, string>(HttpStatusCode.NotFound, string.Empty),
+                    TestName = "Empty"
+                };
+                yield return new TestCaseData(new RequestStateMachineScenario().AddController(new ActionBuilder("Test")
+                        .AddAttribute(typeof(GetAttribute))
+                        .SetReturnType(typeof(string))
+                        .SetReturnValue("test")
+                        .NewAction("NotFound")
+                        .AddAttribute(typeof(StatusCodeAttribute), HttpStatusCode.NotFound)
+                        .SetReturnType(typeof(string))
+                        .SetReturnValue("NotFound")
+                        .Build()
+                        .Invoker
+                        .InstanceType
+                    )
+                    .SetMethod(HttpMethod.Get)
+                    .SetPathAndQuery("/test"))
+                {
+                    ExpectedResult = new Tuple<HttpStatusCode, string>(HttpStatusCode.Ok, "test"),
+                    TestName = "Usual action"
+                };
+                yield return new TestCaseData(new RequestStateMachineScenario().AddController(new ActionBuilder("Test")
+                        .AddAttribute(typeof(GetAttribute))
+                        .NewAction("NotFound")
+                        .AddAttribute(typeof(StatusCodeAttribute), HttpStatusCode.NotFound)
+                        .SetReturnType(typeof(string))
+                        .SetReturnValue("NotFound")
+                        .Build()
+                        .Invoker
+                        .InstanceType)
+                    .SetMethod(HttpMethod.Get)
+                    .SetPathAndQuery("/qwerty"))
+                {
+                    ExpectedResult = new Tuple<HttpStatusCode, string>(HttpStatusCode.NotFound, "NotFound"),
+                    TestName = "Status code 404 action"
+                };
+                yield return new TestCaseData(new RequestStateMachineScenario().AddController(new ActionBuilder("Test")
+                        .AddAttribute(typeof(PostAttribute))
+                        .SetReturnType(typeof(string))
+                        .SetReturnValue("test")
+                        .NewAction("MethodNotAllowed")
+                        .AddAttribute(typeof(StatusCodeAttribute), HttpStatusCode.MethodNotAllowed)
+                        .SetReturnType(typeof(string))
+                        .SetReturnValue("MethodNotAllowed")
+                        .Build()
+                        .Invoker
+                        .InstanceType
+                    )
+                    .SetMethod(HttpMethod.Get)
+                    .SetPathAndQuery("/test"))
+                {
+                    ExpectedResult = new Tuple<HttpStatusCode, string>(HttpStatusCode.MethodNotAllowed, "MethodNotAllowed"),
+                    TestName = "Status code 405 action"
+                };
+                yield return new TestCaseData(new RequestStateMachineScenario().AddController(new ActionBuilder("Test")
+                        .AddAttribute(typeof(GetAttribute))
+                        .Throws(typeof(Exception))
+                        .NewAction("InternalServerError")
+                        .AddAttribute(typeof(StatusCodeAttribute), HttpStatusCode.InternalServerError)
+                        .SetReturnType(typeof(string))
+                        .SetReturnValue("InternalServerError")
+                        .Build()
+                        .Invoker
+                        .InstanceType
+                    )
+                    .SetMethod(HttpMethod.Get)
+                    .SetPathAndQuery("/test"))
+                {
+                    ExpectedResult = new Tuple<HttpStatusCode, string>(HttpStatusCode.InternalServerError, "InternalServerError"),
+                    TestName = "Status code 500 action"
+                };
+                yield return new TestCaseData(new RequestStateMachineScenario().AddController(new ActionBuilder("Before")
+                        .AddAttribute(typeof(BeforeAttribute))
+                        .NewAction("Test")
+                        .AddAttribute(typeof(GetAttribute))
+                        .SetReturnType(typeof(string))
+                        .SetReturnValue("test")
+                        .Build()
+                        .Invoker
+                        .InstanceType
+                    )
+                    .SetMethod(HttpMethod.Get)
+                    .SetPathAndQuery("/test"))
+                {
+                    ExpectedResult = new Tuple<HttpStatusCode, string>(HttpStatusCode.Ok, "test"),
+                    TestName = "Before action without output"
+                };
+                yield return new TestCaseData(new RequestStateMachineScenario().AddController(new ActionBuilder("Before")
+                        .AddAttribute(typeof(BeforeAttribute))
+                        .SetReturnType(typeof(string))
+                        .SetReturnValue("before")
+                        .NewAction("Test")
+                        .AddAttribute(typeof(GetAttribute))
+                        .SetReturnType(typeof(string))
+                        .SetReturnValue("test")
+                        .Build()
+                        .Invoker
+                        .InstanceType
+                    )
+                    .SetMethod(HttpMethod.Get)
+                    .SetPathAndQuery("/test"))
+                {
+                    ExpectedResult = new Tuple<HttpStatusCode, string>(HttpStatusCode.Ok, "before"),
+                    TestName = "Before action with output"
+                };
+                yield return new TestCaseData(new RequestStateMachineScenario().AddController(new ActionBuilder("Before")
+                        .AddAttribute(typeof(BeforeAttribute))
+                        .SetReturnType(typeof(string))
+                        .SetReturnValue("before")
+                        .Build()
+                        .Invoker
+                        .InstanceType)
+                    .AddController(new ActionBuilder("Test")
+                        .AddAttribute(typeof(GetAttribute))
+                        .SetReturnType(typeof(string))
+                        .SetReturnValue("test")
+                        .Build()
+                        .Invoker
+                        .InstanceType)
+                    .SetMethod(HttpMethod.Get)
+                    .SetPathAndQuery("/test"))
+                {
+                    ExpectedResult = new Tuple<HttpStatusCode, string>(HttpStatusCode.Ok, "test"),
+                    TestName = "Before action in another controller"
+                };
+                yield return new TestCaseData(new RequestStateMachineScenario().AddController(new ActionBuilder("Test")
+                        .AddAttribute(typeof(GetAttribute))
+                        .AddParameter("a", typeof(int))
+                        .AddParameter("b", typeof(int))
+                        .AddParameter("c", typeof(int), typeof(FromUrlAttribute), "cc")
+                        .AddParameter("d", typeof(int), typeof(FromUrlAttribute))
+                        .AddParameter("e", typeof(int), typeof(FromContentAttribute), "ee")
+                        .AddParameter("f", typeof(int), typeof(FromContentAttribute))
+                        .AddParameter("g", typeof(int), typeof(BinderAttribute), typeof(PrimitiveBinder))
+                        .AddParameter("h", typeof(int), typeof(BinderAttribute), typeof(PrimitiveBinder))
+                        .AddParameter("i", typeof(object))
+                        .AddParameter("j", typeof(DateTime))
+                        .SetReturnType(typeof(string))
+                        .SetReturnValue("test")
+                        .Build()
+                        .Invoker
+                        .InstanceType
+                    )
+                    .SetMethod(HttpMethod.Get)
+                    .SetPathAndQuery("/test?a=3&cc=4&ee=5"))
+                {
+                    ExpectedResult = new Tuple<HttpStatusCode, string>(HttpStatusCode.Ok, "test"),
+                    TestName = "Binding"
                 };
             }
         }
@@ -299,6 +458,30 @@ namespace HttpLight.Test.UnitTests
             var state = stateMachine.SendResponseAsync(context).Result;
             var output = StreamToString(new MemoryStream(((MemoryStream) context.OutputStream ?? new MemoryStream()).ToArray()));
             return new Tuple<RequestState, string>(state, output);
+        }
+#endif
+
+        [TestCaseSource(nameof(StartData))]
+        public object Start(object scenario)
+        {
+            var scenarioInstance = (RequestStateMachineScenario) scenario;
+            var stateMachine = scenarioInstance.GetRequestStateMachine();
+            var context = scenarioInstance.GetContext();
+            stateMachine.Start(context);
+            var output = StreamToString(new MemoryStream(((MemoryStream) context.OutputStream ?? new MemoryStream()).ToArray()));
+            return new Tuple<HttpStatusCode, string>(context.Response.StatusCode, output);
+        }
+
+#if FEATURE_ASYNC
+        [TestCaseSource(nameof(StartData))]
+        public object StartAsync(object scenario)
+        {
+            var scenarioInstance = (RequestStateMachineScenario) scenario;
+            var stateMachine = scenarioInstance.GetRequestStateMachine();
+            var context = scenarioInstance.GetContext();
+            stateMachine.StartAsync(context).Wait();
+            var output = StreamToString(new MemoryStream(((MemoryStream) context.OutputStream ?? new MemoryStream()).ToArray()));
+            return new Tuple<HttpStatusCode, string>(context.Response.StatusCode, output);
         }
 #endif
 

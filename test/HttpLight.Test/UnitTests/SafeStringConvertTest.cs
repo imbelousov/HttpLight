@@ -125,6 +125,10 @@ namespace HttpLight.Test.UnitTests
 
         [TestCase(typeof(int), ExpectedResult = true, TestName = "Supported")]
         [TestCase(typeof(object), ExpectedResult = false, TestName = "Not supported")]
+        [TestCase(typeof(int[]), ExpectedResult = true, TestName = "Array supported")]
+        [TestCase(typeof(object[]), ExpectedResult = false, TestName = "Array not supported")]
+        [TestCase(typeof(IEnumerable<int>), ExpectedResult = true, TestName = "Generic supported")]
+        [TestCase(typeof(IEnumerable<object>), ExpectedResult = false, TestName = "Generic not supported")]
         public bool IsTypeSupported(Type type)
         {
             return SafeStringConvert.IsTypeSupported(type);

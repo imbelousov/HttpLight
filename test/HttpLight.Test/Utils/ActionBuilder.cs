@@ -12,7 +12,7 @@ namespace HttpLight.Test.Utils
         private const string TempAssemblyName = "HttpLight.Test.TempAssembly";
         private const string TempModuleName = "TempModule";
         private const string DefaultControllerName = "MainController";
-        private const string FieldName = "Value";
+        private const string FieldPattern = "{0}Value";
 
         private string _controllerName;
         private string _name;
@@ -22,6 +22,8 @@ namespace HttpLight.Test.Utils
         private IList<Tuple<Type, string, ICollection<AttributeInfo>>> _parameters;
         private Type _exceptionType;
         private string _exceptionMessage;
+        private TypeBuilder _typeBuilder;
+        private IList<Action<Type>> _fieldSetters;
 
         private ActionBuilder()
         {
@@ -36,6 +38,7 @@ namespace HttpLight.Test.Utils
             _returnType = typeof(void);
             _parameters = new List<Tuple<Type, string, ICollection<AttributeInfo>>>();
             _exceptionType = null;
+            _fieldSetters = new List<Action<Type>>();
         }
 
         public ActionBuilder SetControllerName(string name)
@@ -123,21 +126,37 @@ namespace HttpLight.Test.Utils
 
         public Action Build()
         {
-            var typeBuilder = BuildType();
-            var methodBuilder = BuildMethod(typeBuilder);
-            BuildMethodBody(typeBuilder, methodBuilder);
-            var type = typeBuilder.CreateType();
-            var field = type.GetField(FieldName, BindingFlags.Public | BindingFlags.Static);
-            if (field != null)
-                field.SetValue(null, _returnValue);
+            FinishMethod();
+            var type = _typeBuilder.CreateType();
+            foreach (var fieldSetter in _fieldSetters)
+                fieldSetter(type);
             var methodInfo = type.GetMethod(_name, BindingFlags.Instance | BindingFlags.Public);
             var invoker = new MethodInvoker(methodInfo, type);
             return new Action(invoker);
         }
 
+        public ActionBuilder NewAction(string name)
+        {
+            FinishMethod();
+            return new ActionBuilder(name) {_typeBuilder = _typeBuilder, _fieldSetters = _fieldSetters};
+        }
+
         public object Clone()
         {
             return CreateCopy();
+        }
+
+        private void FinishMethod()
+        {
+            _typeBuilder = _typeBuilder ?? BuildType();
+            var methodBuilder = BuildMethod(_typeBuilder);
+            BuildMethodBody(_typeBuilder, methodBuilder);
+            _fieldSetters.Add(x =>
+            {
+                var field = x.GetField(string.Format(FieldPattern, _name), BindingFlags.Public | BindingFlags.Static);
+                if (field != null)
+                    field.SetValue(null, _returnValue);
+            });
         }
 
         private ActionBuilder CreateCopy()
@@ -151,6 +170,8 @@ namespace HttpLight.Test.Utils
             copy._parameters = _parameters.ToList();
             copy._exceptionType = _exceptionType;
             copy._exceptionMessage = _exceptionMessage;
+            copy._typeBuilder = _typeBuilder;
+            copy._fieldSetters = _fieldSetters.ToList();
             return copy;
         }
 
@@ -201,7 +222,7 @@ namespace HttpLight.Test.Utils
             }
             if (_returnType != typeof(void))
             {
-                var fieldBuilder = typeBuilder.DefineField(FieldName, _returnType, FieldAttributes.Public | FieldAttributes.Static);
+                var fieldBuilder = typeBuilder.DefineField(string.Format(FieldPattern, _name), _returnType, FieldAttributes.Public | FieldAttributes.Static);
                 ilGenerator.Emit(OpCodes.Ldsfld, fieldBuilder);
             }
             ilGenerator.Emit(OpCodes.Ret);

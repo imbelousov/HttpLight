@@ -11,6 +11,18 @@ HttpLight is designed to simplify the process of creating self-hosted high-loade
 * Supports async/await actions;
 * Has a simple and habitual architecture.
 
+## Performance
+
+All measurements are made with [Apache JMeter](http://jmeter.apache.org/).
+
+![](https://raw.githubusercontent.com/imbelousov/HttpLight/master/images/performance.png)
+
+|                                                               | Simple GET | Simple POST | Single parameter | 5 parameters | 404   |
+|---------------------------------------------------------------|------------|-------------|------------------|--------------|-------|
+| [HttpLight](https://github.com/imbelousov/HttpLight)          | 22854      | 23252       | 19901            | 13591        | 22241 |
+| [WCF](https://msdn.microsoft.com/en-us/library/bb907578.aspx) | 14679      | 14510       | 11406            | 10190        | 8111  |
+| [NancyFx](http://nancyfx.org/)                                | 14072      | 13533       | 12513            | 12206        | 1013  |
+
 ## Documentation
 
 ### 1. Basics

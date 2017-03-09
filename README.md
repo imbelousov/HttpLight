@@ -85,7 +85,30 @@ public string Sum(int[] a)
 ```
 In this case "8" will be response for request http://localhost:8080/Sum?a=5&a=3.
 
-#### 1.5. Async pattern
+#### 1.5. Parameters source
+
+By default values of parameters are transmitted via URL. You can specify the source of values with `[FromUrl]` and `[FromContent]` attributes. Moreover you can customize names or even create two different parameters with the same names but different types:
+```c#
+[Get]
+public void Action1([FromUrl] int? a, [FromUrl("a")] string aRaw)
+{
+}
+
+[Post]
+public void Action2([FromContent] int a)
+{
+}
+```
+`[FromContent]` attribute reads content stream to end, so in case of using this, you are not able to read content as stream. However raw string value is still available:
+```c#
+[Post]
+public void Action([FromContent] int a)
+{
+    var raw = Request.Content.RawContent;
+}
+```
+
+#### 1.6. Async pattern
 
 HttpLight fully supports async/await pattern. Just make async action instead of sync and use it without any restrictions:
 ```c#
@@ -95,3 +118,35 @@ public async Task<string> Hello()
     return await Task.Run(() => "Hello!");
 }
 ```
+
+### 2. Customization
+
+#### 2.1. Parameters binder
+
+Sometimes you can be not satisfied by default binder. Default binder converts URL-encoded value to specified type. You can create your own binder. For example, you can use your model as parameter. The simpliest example is represented below:
+```c#
+class CustomModel
+{
+    public string A { get; set; }
+    public string B { get; set; }
+}
+
+class CustomBinder : IActionParameterBinder
+{
+    public object Bind(ActionParameterBinderContext context)
+    {
+        return new CustomModel
+        {
+            // Extract values from given source
+            A = context.Source.GetValues(context.ParameterName + "a").FirstOrDefault(),
+            B = context.Source.GetValues(context.ParameterName + "b").FirstOrDefault()
+        };
+    }
+}
+
+[Get]
+public void Action([Binder(typeof(CustomBinder))] CustomModel x)
+{
+}
+```
+Test this with request to http://localhost:8080/Action?xa=1&xb=2.

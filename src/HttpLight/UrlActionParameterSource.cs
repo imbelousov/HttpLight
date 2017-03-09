@@ -14,7 +14,7 @@ namespace HttpLight
 
         public string[] GetValues(string name)
         {
-            return _request.UrlParameters.GetValues(name);
+            return _request.UrlParameters.GetValues(name) ?? new string[0];
         }
 
         public IEnumerable<KeyValuePair<string, string[]>> GetAllValues()

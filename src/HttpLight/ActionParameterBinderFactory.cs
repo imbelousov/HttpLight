@@ -9,22 +9,40 @@ namespace HttpLight
 {
     internal class ActionParameterBinderFactory
     {
-        private IDictionary<Type, IActionParameterBinder> _cache;
+        private IDictionary<MethodParameter, IActionParameterBinder> _cache;
 
         public ActionParameterBinderFactory()
         {
-            _cache = new ConcurrentDictionary<Type, IActionParameterBinder>();
+            _cache = new ConcurrentDictionary<MethodParameter, IActionParameterBinder>();
         }
 
-        public IActionParameterBinder GetBinder(Type parameterType, Attribute[] parameterAttributes)
+        public IActionParameterBinder GetBinder(MethodParameter parameter)
         {
-            var binderAttribute = GetBinderAttribute(parameterAttributes);
+            var binder = LoadFromCache(parameter);
+            if (binder != null)
+                return binder;
+            var binderAttribute = GetBinderAttribute(parameter.Attributes);
             var binderType = binderAttribute != null
                 ? binderAttribute.Binder
-                : GetDefaultBinderFor(parameterType);
+                : GetDefaultBinderFor(parameter.Type);
             if (binderType == null)
                 return null;
-            return GetBinder(binderType);
+            binder = CreateBinder(binderType);
+            if (binder != null)
+                SaveToCache(parameter, binder);
+            return binder;
+        }
+
+        private IActionParameterBinder LoadFromCache(MethodParameter parameter)
+        {
+            IActionParameterBinder binder;
+            _cache.TryGetValue(parameter, out binder);
+            return binder;
+        }
+
+        private void SaveToCache(MethodParameter parameter, IActionParameterBinder binder)
+        {
+            _cache[parameter] = binder;
         }
 
         private BinderAttribute GetBinderAttribute(Attribute[] parameterAttributes)
@@ -39,13 +57,9 @@ namespace HttpLight
             return null;
         }
 
-        private IActionParameterBinder GetBinder(Type binderType)
+        private IActionParameterBinder CreateBinder(Type binderType)
         {
-            IActionParameterBinder binder;
-            if (_cache.TryGetValue(binderType, out binder))
-                return binder;
-            binder = (IActionParameterBinder) Activator.CreateInstance(binderType);
-            _cache[binderType] = binder;
+            var binder = (IActionParameterBinder) Activator.CreateInstance(binderType);
             return binder;
         }
     }

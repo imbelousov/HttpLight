@@ -283,7 +283,7 @@ namespace HttpLight
             for (var i = 0; i < action.Invoker.Parameters.Count; i++)
             {
                 var parameter = action.Invoker.Parameters[i];
-                var binder = _binderFactory.GetBinder(parameter.Type, parameter.Attributes);
+                var binder = _binderFactory.GetBinder(parameter);
                 if (binder != null)
                 {
                     result[i] = binder.Bind(new ActionParameterBinderContext

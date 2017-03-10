@@ -1,9 +1,12 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using HttpLight.Attributes;
 using HttpLight.Utils;
+
+#if FEATURE_CONCURRENT
+using System.Collections.Concurrent;
+#endif
 
 namespace HttpLight
 {
@@ -13,7 +16,11 @@ namespace HttpLight
 
         public ActionParameterBinderFactory()
         {
+#if FEATURE_CONCURRENT
             _cache = new ConcurrentDictionary<MethodParameter, IActionParameterBinder>();
+#else
+            _cache = new Dictionary<MethodParameter, IActionParameterBinder>();
+#endif
         }
 
         public IActionParameterBinder GetBinder(MethodParameter parameter)
@@ -36,13 +43,27 @@ namespace HttpLight
         private IActionParameterBinder LoadFromCache(MethodParameter parameter)
         {
             IActionParameterBinder binder;
+#if FEATURE_CONCURRENT
             _cache.TryGetValue(parameter, out binder);
+#else
+            lock (_cache)
+            {
+                _cache.TryGetValue(parameter, out binder);
+            }
+#endif
             return binder;
         }
 
         private void SaveToCache(MethodParameter parameter, IActionParameterBinder binder)
         {
+#if FEATURE_CONCURRENT
             _cache[parameter] = binder;
+#else
+            lock (_cache)
+            {
+                _cache[parameter] = binder;
+            }
+#endif
         }
 
         private BinderAttribute GetBinderAttribute(Attribute[] parameterAttributes)

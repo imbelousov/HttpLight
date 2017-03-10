@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Numerics;
 using System.Threading;
+
+#if FEATURE_NUMERICS
+using System.Numerics;
+#endif
 
 namespace HttpLight.Utils
 {
@@ -38,8 +41,10 @@ namespace HttpLight.Utils
             Converters[typeof(long?)] = ToNullableInt64;
             Converters[typeof(ulong)] = ToUInt64;
             Converters[typeof(ulong?)] = ToNullableUInt64;
+#if FEATURE_NUMERICS
             Converters[typeof(BigInteger)] = ToBigInteger;
             Converters[typeof(BigInteger?)] = ToNullableBigInteger;
+#endif
             Converters[typeof(float)] = ToSingle;
             Converters[typeof(float?)] = ToNullableSingle;
             Converters[typeof(double)] = ToDouble;
@@ -273,6 +278,7 @@ namespace HttpLight.Utils
             return result;
         }
 
+#if FEATURE_NUMERICS
         private static object ToBigInteger(string s, IFormatProvider provider)
         {
             BigInteger result;
@@ -287,6 +293,7 @@ namespace HttpLight.Utils
                 return null;
             return result;
         }
+#endif
 
         private static object ToSingle(string s, IFormatProvider provider)
         {
@@ -358,15 +365,37 @@ namespace HttpLight.Utils
         private static object ToGuid(string s, IFormatProvider provider)
         {
             Guid result;
+#if FEATURE_GUIDTRYPARSE
             Guid.TryParse(s, out result);
+#else
+            try
+            {
+                result = new Guid(s);
+            }
+            catch
+            {
+                result = Guid.Empty;
+            }
+#endif
             return result;
         }
 
         private static object ToNullableGuid(string s, IFormatProvider provider)
         {
             Guid result;
+#if FEATURE_GUIDTRYPARSE
             if (!Guid.TryParse(s, out result))
                 return null;
+#else
+            try
+            {
+                result = new Guid(s);
+            }
+            catch
+            {
+                return null;
+            }
+#endif
             return result;
         }
     }

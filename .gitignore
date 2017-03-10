@@ -4,3 +4,5 @@ obj/
 packages/
 TestResults/
 *.user
+*.db
+*.opendb

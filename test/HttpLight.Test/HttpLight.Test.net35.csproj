@@ -3,12 +3,12 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{629A54A4-372A-4A08-993A-CBF2869F3918}</ProjectGuid>
+    <ProjectGuid>{5677851E-EA0C-41DD-9C31-28F20F975864}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>HttpLight.Test</RootNamespace>
     <AssemblyName>HttpLight.Test</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
@@ -31,17 +31,16 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;FEATURE_GUIDTRYPARSE;FEATURE_NUMERICS;FEATURE_CACHING;FEATURE_STREAMCOPYTO;FEATURE_CONCURRENT</DefineConstants>
+    <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="nunit.framework, Version=3.6.1.0, Culture=neutral, PublicKeyToken=2638cd05610744eb, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\NUnit.3.6.1\lib\net40\nunit.framework.dll</HintPath>
+      <HintPath>..\..\packages\NUnit.3.6.1\lib\net35\nunit.framework.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Numerics" />
     <Reference Include="System.Web" />
   </ItemGroup>
   <Choose>
@@ -72,11 +71,12 @@
     <Compile Include="Utils\FakeHttpResponse.cs" />
     <Compile Include="Utils\FakeRequestStateMachineContext.cs" />
     <Compile Include="Utils\RequestStateMachineScenario.cs" />
+    <Compile Include="Utils\Tuple.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\HttpLight\HttpLight.net40.csproj">
-      <Project>{e82d194f-dc15-4b1c-94ca-11203bcb1232}</Project>
-      <Name>HttpLight.net40</Name>
+    <ProjectReference Include="..\..\src\HttpLight\HttpLight.net35.csproj">
+      <Project>{64691f9a-cfd4-4f7e-ac34-a7b9b17962eb}</Project>
+      <Name>HttpLight.net35</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -102,4 +102,11 @@
   </Choose>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
 </Project>

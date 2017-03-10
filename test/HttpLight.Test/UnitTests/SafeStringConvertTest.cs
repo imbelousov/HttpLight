@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Numerics;
 using System.Threading;
 using HttpLight.Utils;
 using NUnit.Framework;
+
+#if FEATURE_NUMERICS
+using System.Numerics;
+#endif
 
 namespace HttpLight.Test.UnitTests
 {
@@ -52,10 +55,12 @@ namespace HttpLight.Test.UnitTests
                 yield return new TestCaseData("", typeof(ulong)) {ExpectedResult = (ulong) 0, TestName = "ulong default"};
                 yield return new TestCaseData("10", typeof(ulong?)) {ExpectedResult = (ulong?) 10, TestName = "ulong?"};
                 yield return new TestCaseData("", typeof(ulong?)) {ExpectedResult = null, TestName = "ulong? default"};
+#if FEATURE_NUMERICS
                 yield return new TestCaseData("10", typeof(BigInteger)) {ExpectedResult = new BigInteger(10), TestName = "BigInteger"};
                 yield return new TestCaseData("", typeof(BigInteger)) {ExpectedResult = new BigInteger(0), TestName = "BigInteger default"};
                 yield return new TestCaseData("10", typeof(BigInteger?)) {ExpectedResult = (BigInteger?) new BigInteger(10), TestName = "BigInteger?"};
                 yield return new TestCaseData("", typeof(BigInteger?)) {ExpectedResult = null, TestName = "BigInteger? default"};
+#endif
                 yield return new TestCaseData("1.5", typeof(float)) {ExpectedResult = 1.5f, TestName = "float"};
                 yield return new TestCaseData("", typeof(float)) {ExpectedResult = 0.0f, TestName = "float default"};
                 yield return new TestCaseData("1.5", typeof(float?)) {ExpectedResult = (float?) 1.5f, TestName = "float?"};
@@ -78,9 +83,9 @@ namespace HttpLight.Test.UnitTests
                 yield return new TestCaseData("false", typeof(bool?)) {ExpectedResult = (bool?) false, TestName = "bool? string false"};
                 yield return new TestCaseData("0", typeof(bool?)) {ExpectedResult = (bool?) false, TestName = "bool? bit false"};
                 yield return new TestCaseData("", typeof(bool?)) {ExpectedResult = null, TestName = "bool? default"};
-                yield return new TestCaseData("3EDB8DD5-3BDC-4B2E-B9E7-4928E7212A0C", typeof(Guid)) {ExpectedResult = Guid.Parse("3EDB8DD5-3BDC-4B2E-B9E7-4928E7212A0C"), TestName = "Guid"};
+                yield return new TestCaseData("3EDB8DD5-3BDC-4B2E-B9E7-4928E7212A0C", typeof(Guid)) {ExpectedResult = new Guid("3EDB8DD5-3BDC-4B2E-B9E7-4928E7212A0C"), TestName = "Guid"};
                 yield return new TestCaseData("", typeof(Guid)) {ExpectedResult = Guid.Empty, TestName = "Guid default"};
-                yield return new TestCaseData("3EDB8DD5-3BDC-4B2E-B9E7-4928E7212A0C", typeof(Guid?)) {ExpectedResult = (Guid?) Guid.Parse("3EDB8DD5-3BDC-4B2E-B9E7-4928E7212A0C"), TestName = "Guid?"};
+                yield return new TestCaseData("3EDB8DD5-3BDC-4B2E-B9E7-4928E7212A0C", typeof(Guid?)) {ExpectedResult = (Guid?) new Guid("3EDB8DD5-3BDC-4B2E-B9E7-4928E7212A0C"), TestName = "Guid?"};
                 yield return new TestCaseData("", typeof(Guid?)) {ExpectedResult = null, TestName = "Guid? default"};
             }
         }

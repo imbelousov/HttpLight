@@ -31,7 +31,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;FEATURE_ASYNC;FEATURE_WEBSOCKET</DefineConstants>
+    <DefineConstants>TRACE;FEATURE_ASYNC;FEATURE_WEBSOCKET;FEATURE_GUIDTRYPARSE;FEATURE_NUMERICS;FEATURE_CACHING;FEATURE_STREAMCOPYTO;FEATURE_CONCURRENT</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>

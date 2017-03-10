@@ -27,7 +27,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;FEATURE_GUIDTRYPARSE;FEATURE_NUMERICS;FEATURE_CACHING;FEATURE_STREAMCOPYTO;FEATURE_CONCURRENT</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Release\HttpLight.xml</DocumentationFile>

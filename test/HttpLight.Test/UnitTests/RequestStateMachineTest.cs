@@ -6,6 +6,10 @@ using HttpLight.Attributes;
 using HttpLight.Test.Utils;
 using NUnit.Framework;
 
+#if !FEATURE_STREAMCOPYTO
+using HttpLight.Utils;
+#endif
+
 namespace HttpLight.Test.UnitTests
 {
     [TestFixture]

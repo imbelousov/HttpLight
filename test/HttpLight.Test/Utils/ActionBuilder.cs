@@ -178,7 +178,7 @@ namespace HttpLight.Test.Utils
         private TypeBuilder BuildType()
         {
             var assemblyName = new AssemblyName(TempAssemblyName);
-            var assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.RunAndCollect);
+            var assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
             var moduleBuilder = assemblyBuilder.DefineDynamicModule(TempModuleName);
             var typeBuilder = moduleBuilder.DefineType(_controllerName, TypeAttributes.Public | TypeAttributes.Class, typeof(Controller));
             return typeBuilder;

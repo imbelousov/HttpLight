@@ -19,6 +19,7 @@ namespace HttpLight.Utils
         private Type _returnType;
         private Type _instanceType;
         private Func<object, object[], object> _method;
+        private Action<object, object[]> _voidMethod;
         private MethodInfo _methodInfo;
 #if FEATURE_ASYNC
         private bool _isAsync;
@@ -52,6 +53,11 @@ namespace HttpLight.Utils
             get { return _methodInfo; }
         }
 
+        private bool IsVoidMethod
+        {
+            get { return MethodInfo.ReturnType == typeof(void); }
+        }
+
         public MethodInvoker(MethodInfo methodInfo, Type instanceType)
         {
             _parameters = GetParameters(methodInfo);
@@ -67,12 +73,21 @@ namespace HttpLight.Utils
                     _extractResult = CreateExtractResultMethod(_returnType);
             }
 #endif
-            _method = CreateMethod(methodInfo, instanceType);
+            if (IsVoidMethod)
+                _voidMethod = CreateVoidMethod(methodInfo, instanceType);
+            else
+                _method = CreateMethod(methodInfo, instanceType);
         }
 
         public object Invoke(object instance, object[] parameters)
         {
-            return _method(instance, parameters);
+            if (IsVoidMethod)
+            {
+                _voidMethod(instance, parameters);
+                return null;
+            }
+            else
+                return _method(instance, parameters);
         }
 
 #if FEATURE_ASYNC
@@ -102,42 +117,36 @@ namespace HttpLight.Utils
 
         private Func<object, object[], object> CreateMethod(MethodInfo methodInfo, Type instanceType)
         {
-            var instance = Expression.Parameter(typeof(object));
-            var parameters = Expression.Parameter(typeof(object[]));
-            if (methodInfo.ReturnType != typeof(void))
-            {
-                return Expression.Lambda<Func<object, object[], object>>(
-                    Expression.Convert(
-                        Expression.Call(
-                            Expression.Convert(instance, instanceType),
-                            methodInfo,
-                            _parameters.Select((x, i) => Expression.Convert(
-                                Expression.ArrayIndex(parameters, Expression.Constant(i)),
-                                x.Type
-                            ))
-                        ), typeof(object)
-                    ), instance, parameters
-                ).Compile();
-            }
-            else
-            {
-                return Expression.Lambda<Func<object, object[], object>>(
-                    Expression.Block(
-                        Expression.Call(
-                            Expression.Convert(instance, instanceType),
-                            methodInfo,
-                            _parameters.Select((x, i) => Expression.Convert(
-                                Expression.ArrayIndex(parameters, Expression.Constant(i)),
-                                x.Type
-                            ))
-                        ),
-                        Expression.Label(
-                            Expression.Label(typeof(object)),
-                            Expression.Constant(null)
-                        )
-                    ), instance, parameters
-                ).Compile();
-            }
+            var instance = Expression.Parameter(typeof(object), "instance");
+            var parameters = Expression.Parameter(typeof(object[]), "parameters");
+            return Expression.Lambda<Func<object, object[], object>>(
+                Expression.Convert(
+                    Expression.Call(
+                        Expression.Convert(instance, instanceType),
+                        methodInfo,
+                        _parameters.Select((x, i) => (Expression) Expression.Convert(
+                            Expression.ArrayIndex(parameters, Expression.Constant(i)),
+                            x.Type
+                        ))
+                    ), typeof(object)
+                ), instance, parameters
+            ).Compile();
+        }
+
+        private Action<object, object[]> CreateVoidMethod(MethodInfo methodInfo, Type instanceType)
+        {
+            var instance = Expression.Parameter(typeof(object), "instance");
+            var parameters = Expression.Parameter(typeof(object[]), "parameters");
+            return Expression.Lambda<Action<object, object[]>>(
+                Expression.Call(
+                    Expression.Convert(instance, instanceType),
+                    methodInfo,
+                    _parameters.Select((x, i) => (Expression) Expression.Convert(
+                        Expression.ArrayIndex(parameters, Expression.Constant(i)),
+                        x.Type
+                    ))
+                ), instance, parameters
+            ).Compile();
         }
 
 #if FEATURE_ASYNC
